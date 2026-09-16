@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#1c2a1e" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Masáže Iris" />
+<title>Masáže Iris</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<style>
+  html,body{margin:0;padding:0;background:#1c2a1e;}
+  #root{min-height:100vh;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+
+/* ---- Lokální náhrada za Claude Artifact window.storage: ukládá do localStorage v prohlížeči ----
+   POZOR: "shared" data (slosování, feed výher, admin nastavení) zde NEJSOU sdílená mezi
+   různými zákazníky/telefony jako v Claude artifactu — jsou jen v tomto prohlížeči.
+   Pro skutečné sdílení mezi zákazníky by bylo potřeba malý backend (viz poznámka v chatu). */
+const storage = {
+  async get(key, shared) {
+    try {
+      const raw = localStorage.getItem((shared ? 'shared:' : 'me:') + key);
+      if (raw === null) return null;
+      return { key, value: raw, shared: !!shared };
+    } catch { return null; }
+  },
+  async set(key, value, shared) {
+    try {
+      localStorage.setItem((shared ? 'shared:' : 'me:') + key, value);
+      return { key, value, shared: !!shared };
+    } catch { return null; }
+  },
+};
+
+const { useState, useEffect, useRef, useCallback } = React;
+
+const GALLERY = []; // fotky jsem kvůli délce kódu vynechal — přidáš je snadno, viz poznámka níže
+
+
+/* ================= ZÁKLADNÍ IDENTITA (needíš měnit) ================= */
+const BUSINESS = { name: 'Masáže Iris', owner: 'Irena Stručková' };
+const TAGLINE = 'Masáže s citem pro detail — a k tomu poctivé dobroty ze stánku.';
+
+/* Změň si podle sebe — chrání administraci */
+const ADMIN_PIN = '1508';
+
+const DEFAULT_CONFIG = {
+  contact: {
+    phone: '731 562 727',
+    email: 'irena.struckova@seznam.cz',
+    facebook: 'https://www.facebook.com/p/Mas%C3%A1%C5%BEe-Iris-61556439245784/',
+    instagram: '',
+  },
+  services: [
+    { name: 'Reflexní masáž chodidel', desc: 'Dřevěné i kovové pomůcky, tlakové body na celé tělo', price: '' },
+    { name: 'Tygrování', desc: 'Japonská technika — teplo a tlak bylinnou tyčinkou, uvolní i otoky', price: '' },
+    { name: 'Klasická relaxační masáž', desc: 'Záda, šíje, celé tělo', price: '' },
+    { name: 'Čokoládová masáž', desc: 'Sezónní speciál — jemný peeling a hydratace', price: '' },
+  ],
+  standItems: [
+    { name: 'Cukrová vata', price: '' },
+    { name: 'Guláš', price: '' },
+    { name: 'Věneček', price: '' },
+    { name: 'Pečená husa/kachna se zelím a knedlíkem', price: '' },
+  ],
+  codes: {
+    MASAZ30: { losy: 2, label: 'masáž 30 min' },
+    MASAZ45: { losy: 3, label: 'masáž 45 min' },
+    MASAZ60: { losy: 4, label: 'masáž 60 min' },
+    GULAS:   { losy: 1, label: 'guláš' },
+    VATA:    { losy: 1, label: 'cukrová vata' },
+    VENECEK: { losy: 1, label: 'věneček' },
+  },
+};
+/* ======================================================================= */
+
+const TASKS_BASE = [
+  { id: 'daily_login', title: 'Denní odemčení', desc: 'Otevři appku dnes poprvé', reward: 1, cooldownMs: 24 * 60 * 60 * 1000 },
+  { id: 'follow_fb',   title: 'Sleduj Facebook', desc: 'Jednorázový bonus na uvítanou', reward: 2, cooldownMs: Infinity, socialKey: 'facebook' },
+  { id: 'follow_ig',   title: 'Sleduj Instagram', desc: 'Jednorázový bonus na uvítanou', reward: 2, cooldownMs: Infinity, socialKey: 'instagram' },
+  { id: 'review',      title: 'Napiš recenzi', desc: 'Jednorázový bonus, díky!', reward: 3, cooldownMs: Infinity, socialKey: 'facebook' },
+  { id: 'share',       title: 'Sdílej appku', desc: 'Pošli appku kamarádovi/kamarádce', reward: 2, cooldownMs: 12 * 60 * 60 * 1000 },
+];
+
+const CODE_COOLDOWN_MS = 10 * 60 * 1000;
+
+const SCRATCH_PRIZES = [
+  { label: 'Smůla, zkus to příště', weight: 550, win: false },
+  { label: '1× cukrová vata zdarma', weight: 150, win: true },
+  { label: '1× věneček zdarma', weight: 120, win: true },
+  { label: '3× věneček zdarma', weight: 80, win: true },
+  { label: 'Sleva 50 Kč na masáž', weight: 60, win: true },
+  { label: '10× věneček zdarma', weight: 25, win: true },
+  { label: 'Sleva 10 % na masáž', weight: 10, win: true },
+  { label: 'Masáž 30 min zdarma', weight: 4, win: true },
+  { label: 'Masáž 60 min + dárek zdarma', weight: 1, win: true },
+];
+
+const WHEEL_PRIZES = [
+  { label: 'Sleva 20 % na masáž', weight: 150 },
+  { label: '5× věneček zdarma', weight: 150 },
+  { label: 'Guláš zdarma', weight: 150 },
+  { label: 'Cukrová vata zdarma', weight: 150 },
+  { label: 'Poukaz 300 Kč', weight: 60 },
+  { label: 'Masáž 30 min zdarma', weight: 30 },
+  { label: 'Extra los do slosování', weight: 200 },
+  { label: 'Masáž 60 min + dárek', weight: 10 },
+];
+
+const WHEEL_COST = 5;
+const STORAGE_KEY = 'iris-state-v1';
+const RAFFLE_KEY = 'iris-raffle-pool-v1';
+const FEED_KEY = 'iris-recent-wins-v1';
+const CONFIG_KEY = 'iris-config-v1';
+const CANVAS_W = 300;
+const CANVAS_H = 170;
+const REVEAL_THRESHOLD = 0.5;
+
+function weightedPick(table) {
+  const total = table.reduce((s, p) => s + p.weight, 0);
+  let roll = Math.random() * total;
+  for (const p of table) { if (roll < p.weight) return p; roll -= p.weight; }
+  return table[0];
+}
+function fmtCountdown(msLeft) {
+  if (msLeft <= 0) return null;
+  const h = Math.floor(msLeft / 3600000);
+  const m = Math.floor((msLeft % 3600000) / 60000);
+  return h > 0 ? `${h}h ${m}m` : `${Math.max(m, 1)}m`;
+}
+function codesToArray(codesObj) {
+  return Object.entries(codesObj || {}).map(([code, v]) => ({ code, losy: v.losy, label: v.label }));
+}
+function arrayToCodes(arr) {
+  const out = {};
+  arr.forEach(row => { if (row.code.trim()) out[row.code.trim().toUpperCase()] = { losy: Number(row.losy) || 0, label: row.label || row.code }; });
+  return out;
+}
+
+function IrisApp() {
+  const [tab, setTab] = useState('domu');
+  const [state, setState] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const [toast, setToast] = useState('');
+  const [busyTask, setBusyTask] = useState(null);
+  const [codeInput, setCodeInput] = useState('');
+  const [codeMsg, setCodeMsg] = useState('');
+  const [scratchOpen, setScratchOpen] = useState(false);
+  const [scratchResult, setScratchResult] = useState(null);
+  const [wheelSpinning, setWheelSpinning] = useState(false);
+  const [wheelRotation, setWheelRotation] = useState(0);
+  const [wheelResult, setWheelResult] = useState(null);
+  const [raffleTotal, setRaffleTotal] = useState(null);
+  const [feed, setFeed] = useState([]);
+  const [config, setConfig] = useState(DEFAULT_CONFIG);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [draft, setDraft] = useState(null);
+  const [adminMsg, setAdminMsg] = useState('');
+
+  const canvasRef = useRef(null);
+  const drawing = useRef(false);
+  const revealedRef = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await storage.get(STORAGE_KEY, false);
+        if (!cancelled && res?.value) setState(JSON.parse(res.value));
+        else if (!cancelled) setState({ losy: 3, completions: {}, redeemed: {}, scratchHistory: [], wheelHistory: [], raffleEntries: 0 });
+      } catch {
+        if (!cancelled) setState({ losy: 3, completions: {}, redeemed: {}, scratchHistory: [], wheelHistory: [], raffleEntries: 0 });
+      } finally { if (!cancelled) setLoaded(true); }
+      try {
+        const pool = await storage.get(RAFFLE_KEY, true);
+        if (!cancelled) setRaffleTotal(pool?.value ? JSON.parse(pool.value).total : 0);
+      } catch { if (!cancelled) setRaffleTotal(0); }
+      try {
+        const f = await storage.get(FEED_KEY, true);
+        if (!cancelled) setFeed(f?.value ? JSON.parse(f.value) : []);
+      } catch { if (!cancelled) setFeed([]); }
+      try {
+        const c = await storage.get(CONFIG_KEY, true);
+        if (!cancelled && c?.value) setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(c.value) });
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(t); }, []);
+
+  const persist = useCallback(async (next) => {
+    setState(next);
+    try { await storage.set(STORAGE_KEY, JSON.stringify(next), false); } catch {}
+  }, []);
+
+  async function addRaffleEntry(n = 1) {
+    try {
+      const pool = await storage.get(RAFFLE_KEY, true);
+      const cur = pool?.value ? JSON.parse(pool.value).total : 0;
+      const next = cur + n;
+      await storage.set(RAFFLE_KEY, JSON.stringify({ total: next }), true);
+      setRaffleTotal(next);
+    } catch {}
+  }
+  async function pushFeed(label) {
+    try {
+      const cur = await storage.get(FEED_KEY, true);
+      const list = cur?.value ? JSON.parse(cur.value) : [];
+      const next = [{ label, ts: Date.now() }, ...list].slice(0, 15);
+      await storage.set(FEED_KEY, JSON.stringify(next), true);
+      setFeed(next);
+    } catch {}
+  }
+  function showToast(msg) { setToast(msg); setTimeout(() => setToast(''), 2600); }
+
+  async function completeTask(task) {
+    if (!state) return;
+    const last = state.completions[task.id];
+    if (last && task.cooldownMs !== Infinity && now - last < task.cooldownMs) return;
+    setBusyTask(task.id);
+    if (task.socialKey && config.contact[task.socialKey]) {
+      window.open(config.contact[task.socialKey], '_blank');
+    }
+    await new Promise(r => setTimeout(r, 250));
+    const next = { ...state, losy: state.losy + task.reward, completions: { ...state.completions, [task.id]: Date.now() } };
+    await persist(next);
+    setBusyTask(null);
+    showToast(`+${task.reward} 🎫 — ${task.title}`);
+  }
+
+  async function redeemCode() {
+    const code = codeInput.trim().toUpperCase();
+    if (!code) return;
+    const found = config.codes[code];
+    if (!found) { setCodeMsg('Neznámý kód.'); return; }
+    const last = state.redeemed[code];
+    if (last && now - last < CODE_COOLDOWN_MS) {
+      setCodeMsg(`Tenhle kód použiješ znovu za ${fmtCountdown(CODE_COOLDOWN_MS - (now - last))}.`);
+      return;
+    }
+    const next = { ...state, losy: state.losy + found.losy, redeemed: { ...state.redeemed, [code]: Date.now() } };
+    await persist(next);
+    setCodeMsg(`+${found.losy} 🎫 za ${found.label}!`);
+    setCodeInput('');
+  }
+
+  function shareApp() {
+    const shareData = { title: BUSINESS.name, text: 'Sbírej losy a vyhrávej u Masáží Iris!', url: window.location.href };
+    if (navigator.share) navigator.share(shareData).catch(() => {});
+    else { navigator.clipboard?.writeText(shareData.url); showToast('Odkaz zkopírován 📋'); }
+  }
+
+  const resetCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'source-over';
+    const grad = ctx.createLinearGradient(0, 0, CANVAS_W, CANVAS_H);
+    grad.addColorStop(0, '#cfc6dd'); grad.addColorStop(1, '#948aad');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    ctx.fillStyle = '#171223'; ctx.font = '700 17px system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('SETŘI MĚ', CANVAS_W / 2, CANVAS_H / 2 - 2);
+    ctx.font = '400 11px system-ui, sans-serif';
+    ctx.fillText('prstem po celé ploše', CANVAS_W / 2, CANVAS_H / 2 + 16);
+    ctx.globalCompositeOperation = 'destination-out';
+    revealedRef.current = false;
+  }, []);
+  useEffect(() => { if (scratchOpen) setTimeout(resetCanvas, 30); }, [scratchOpen, scratchResult, resetCanvas]);
+
+  function getPos(e) {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: ((t.clientX - rect.left) / rect.width) * CANVAS_W, y: ((t.clientY - rect.top) / rect.height) * CANVAS_H };
+  }
+  function scratchAt(x, y) { const ctx = canvasRef.current.getContext('2d'); ctx.beginPath(); ctx.arc(x, y, 19, 0, Math.PI * 2); ctx.fill(); }
+  function checkReveal() {
+    if (revealedRef.current) return;
+    const ctx = canvasRef.current.getContext('2d');
+    const { data } = ctx.getImageData(0, 0, CANVAS_W, CANVAS_H);
+    let cleared = 0, total = 0;
+    for (let i = 3; i < data.length; i += 4 * 16) { total++; if (data[i] === 0) cleared++; }
+    if (cleared / total > REVEAL_THRESHOLD) {
+      revealedRef.current = true;
+      canvasRef.current.style.transition = 'opacity .4s ease';
+      canvasRef.current.style.opacity = '0';
+    }
+  }
+  function onStart(e) { drawing.current = true; const { x, y } = getPos(e); scratchAt(x, y); }
+  function onMove(e) { if (!drawing.current) return; e.preventDefault(); const { x, y } = getPos(e); scratchAt(x, y); checkReveal(); }
+  function onEnd() { drawing.current = false; }
+
+  async function openScratch() {
+    if (!state || state.losy < 1) return;
+    const prize = weightedPick(SCRATCH_PRIZES);
+    const next = { ...state, losy: state.losy - 1, scratchHistory: [{ id: `${Date.now()}`, label: prize.label, date: Date.now() }, ...state.scratchHistory].slice(0, 50) };
+    await persist(next);
+    setScratchResult(prize); setScratchOpen(true);
+    if (prize.win) pushFeed(prize.label);
+  }
+  function closeScratch() { setScratchOpen(false); setScratchResult(null); }
+
+  async function spinWheel() {
+    if (!state || state.losy < WHEEL_COST || wheelSpinning) return;
+    setWheelSpinning(true);
+    const prize = weightedPick(WHEEL_PRIZES);
+    const idx = WHEEL_PRIZES.indexOf(prize);
+    const segAngle = 360 / WHEEL_PRIZES.length;
+    const targetAngle = 360 * 5 + (360 - (idx * segAngle + segAngle / 2)) + (Math.random() * segAngle * 0.6 - segAngle * 0.3);
+    setWheelRotation(prev => prev + targetAngle);
+    setTimeout(async () => {
+      const next = { ...state, losy: state.losy - WHEEL_COST, wheelHistory: [{ id: `${Date.now()}`, label: prize.label, date: Date.now() }, ...state.wheelHistory].slice(0, 50), raffleEntries: state.raffleEntries + 1 };
+      await persist(next);
+      await addRaffleEntry(1);
+      pushFeed(`kolo štěstí: ${prize.label}`);
+      setWheelResult(prize); setWheelSpinning(false);
+    }, 4200);
+  }
+
+  // ---- Admin ----
+  function openAdmin() {
+    setAdminOpen(true);
+    setPinInput(''); setPinError('');
+    if (!adminUnlocked) return;
+    setDraft({ ...config, codesArr: codesToArray(config.codes) });
+  }
+  function checkPin() {
+    if (pinInput === ADMIN_PIN) {
+      setAdminUnlocked(true);
+      setDraft({ ...config, codesArr: codesToArray(config.codes) });
+      setPinError('');
+    } else setPinError('Špatný PIN.');
+  }
+  function closeAdmin() { setAdminOpen(false); }
+
+  async function saveConfig() {
+    const next = {
+      contact: draft.contact,
+      services: draft.services,
+      standItems: draft.standItems,
+      codes: arrayToCodes(draft.codesArr),
+    };
+    try {
+      await storage.set(CONFIG_KEY, JSON.stringify(next), true);
+      setConfig(next);
+      setAdminMsg('Uloženo ✓');
+      setTimeout(() => setAdminMsg(''), 2000);
+    } catch { setAdminMsg('Uložení selhalo.'); }
+  }
+  async function resetRaffle() {
+    if (!window.confirm('Opravdu vynulovat počítadlo slosování? (Použij po vylosování výherce.)')) return;
+    try { await storage.set(RAFFLE_KEY, JSON.stringify({ total: 0 }), true); setRaffleTotal(0); setAdminMsg('Slosování vynulováno ✓'); setTimeout(() => setAdminMsg(''), 2000); } catch {}
+  }
+  async function clearFeed() {
+    try { await storage.set(FEED_KEY, JSON.stringify([]), true); setFeed([]); setAdminMsg('Feed vyčištěn ✓'); setTimeout(() => setAdminMsg(''), 2000); } catch {}
+  }
+
+  function updDraftField(section, idx, field, value) {
+    setDraft(d => {
+      const list = [...d[section]];
+      list[idx] = { ...list[idx], [field]: value };
+      return { ...d, [section]: list };
+    });
+  }
+  function addDraftRow(section, empty) { setDraft(d => ({ ...d, [section]: [...d[section], empty] })); }
+  function removeDraftRow(section, idx) { setDraft(d => ({ ...d, [section]: d[section].filter((_, i) => i !== idx) })); }
+
+  if (!loaded || !state) {
+    return <div style={{ minHeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a79bc4', fontFamily: 'system-ui' }}>Načítám…</div>;
+  }
+
+  return (
+    <div className="iris">
+      <style>{`
+        .iris {
+          --bg: #1c2a1e; --surface: #26362a; --surface-2: #2f4133;
+          --gold: #e0a83e; --rust: #c96a3f; --cream: #f3efe2; --muted: #a9b8a2;
+          background: radial-gradient(circle at 50% -10%, #2a3d2c 0%, var(--bg) 55%);
+          color: var(--cream); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          max-width: 440px; margin: 0 auto; border-radius: 24px; overflow: hidden;
+          padding-bottom: 78px; position: relative;
+        }
+        .iris * { box-sizing: border-box; }
+        .iris h1, .iris h2, .iris h3 { font-family: Georgia, 'Iowan Old Style', serif; margin: 0; }
+        .i-hero { padding: 26px 20px 20px; text-align: center; background: linear-gradient(160deg, #2f4133, #1c2a1e); position: relative; }
+        .i-hero h1 { font-size: 28px; letter-spacing: -0.01em; }
+        .i-hero .i-owner { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .i-hero p { font-size: 14px; color: var(--muted); margin: 10px auto 0; max-width: 280px; line-height: 1.5; }
+        .i-gear { position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.08); border: none; color: var(--cream); width: 32px; height: 32px; border-radius: 50%; font-size: 15px; }
+        .i-social-row { display: flex; justify-content: center; gap: 10px; margin-top: 14px; }
+        .i-social-row a { background: rgba(255,255,255,0.08); color: var(--cream); text-decoration: none; font-size: 12.5px; font-weight: 600; padding: 8px 13px; border-radius: 999px; }
+        .i-content { padding: 18px 16px; }
+        .i-section-title { font-size: 15px; font-weight: 700; color: var(--muted); margin: 0 0 10px; }
+        .i-card { background: var(--surface); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
+        .i-service { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .i-service-name { font-weight: 700; font-size: 14.5px; }
+        .i-service-desc { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+        .i-service-price { font-size: 13px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+        .i-stand-row { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .i-stand-row:last-child { border-bottom: none; }
+        .i-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 4px; }
+        .i-gallery img { width: 100%; height: 90px; object-fit: cover; border-radius: 10px; display: block; }
+        .i-gallery-toggle { width: 100%; background: var(--surface); color: var(--gold); border: 1px dashed rgba(224,168,62,0.4); border-radius: 12px; padding: 10px; font-size: 12.5px; font-weight: 700; margin-top: 8px; }
+        .i-badge-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+        .i-badge { background: var(--surface-2); color: var(--gold); font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; }
+        .i-contact { display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+        .i-contact a { color: var(--cream); text-decoration: none; }
+        .i-cta { display: block; text-align: center; background: var(--rust); color: white; font-weight: 700; padding: 13px; border-radius: 14px; margin-top: 6px; text-decoration: none; font-size: 14.5px; }
+        .i-game-teaser { background: linear-gradient(135deg, var(--gold), var(--rust)); border-radius: 16px; padding: 16px; text-align: center; color: #221a00; margin-bottom: 18px; }
+        .i-game-teaser h3 { font-size: 16px; }
+        .i-game-teaser p { font-size: 13px; margin: 4px 0 10px; opacity: 0.85; }
+        .i-game-teaser button { background: #221a00; color: var(--cream); border: none; padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 13px; }
+        .i-feed-item { font-size: 12.5px; color: var(--muted); padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .i-feed-item b { color: var(--cream); }
+        .i-tickets-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; }
+        .i-tickets-count { font-size: 22px; font-weight: 800; }
+        .i-tickets-label { font-size: 11px; color: var(--muted); }
+        .i-scratch-cta { background: var(--surface); border-radius: 18px; padding: 18px; text-align: center; margin-bottom: 16px; border: 1px dashed rgba(224,168,62,0.4); }
+        .i-scratch-cta button { background: var(--gold); color: #221a00; border: none; border-radius: 14px; padding: 13px 20px; font-weight: 800; font-size: 15px; margin-top: 10px; }
+        .i-scratch-cta button:disabled { background: var(--surface-2); color: var(--muted); }
+        .i-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+        .i-modal { background: var(--surface); border-radius: 20px; padding: 20px; width: 100%; max-width: 340px; text-align: center; max-height: 85vh; overflow-y: auto; }
+        .i-scratch-frame { position: relative; border-radius: 16px; padding: 3px; background: linear-gradient(135deg, var(--gold), var(--rust)); margin: 14px 0; }
+        .i-scratch-inner { position: relative; border-radius: 14px; overflow: hidden; background: var(--surface-2); min-height: ${CANVAS_H}px; display: flex; align-items: center; justify-content: center; }
+        .i-prize-layer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 14px; font-weight: 800; font-size: 17px; }
+        .i-canvas { touch-action: none; display: block; width: 100%; height: auto; }
+        .i-modal button.close { margin-top: 6px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--cream); padding: 10px 20px; border-radius: 12px; font-size: 14px; }
+        .i-wheel-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 16px; }
+        .i-wheel-outer { position: relative; width: 220px; height: 220px; margin-bottom: 14px; }
+        .i-wheel-pointer { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 16px solid var(--gold); z-index: 5; }
+        .i-wheel-svg { width: 100%; height: 100%; transition: transform 4.2s cubic-bezier(0.15,0.85,0.25,1); }
+        .i-wheel-hub { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 34px; height: 34px; border-radius: 50%; background: var(--gold); border: 3px solid var(--surface); }
+        .i-wheel-btn { background: var(--rust); color: white; border: none; border-radius: 14px; padding: 13px 22px; font-weight: 800; font-size: 15px; }
+        .i-wheel-btn:disabled { background: var(--surface-2); color: var(--muted); }
+        .i-wheel-result { margin-top: 12px; font-size: 15px; font-weight: 700; color: var(--gold); text-align: center; min-height: 22px; }
+        .i-code-row { display: flex; gap: 8px; }
+        .i-code-row input { flex: 1; background: var(--surface-2); border: 1px solid rgba(255,255,255,0.12); color: var(--cream); border-radius: 12px; padding: 12px; font-size: 15px; text-transform: uppercase; }
+        .i-code-row button { background: var(--gold); color: #221a00; border: none; border-radius: 12px; padding: 0 16px; font-weight: 800; font-size: 14px; }
+        .i-code-msg { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+        .i-task { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; border-left: 3px solid var(--rust); }
+        .i-task.done { border-left-color: rgba(255,255,255,0.1); opacity: 0.55; }
+        .i-task-title { font-weight: 700; font-size: 13.5px; }
+        .i-task-desc { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+        .i-task button { background: var(--rust); color: white; border: none; border-radius: 10px; padding: 9px 12px; font-weight: 700; font-size: 12.5px; min-width: 60px; }
+        .i-task button:disabled { background: rgba(255,255,255,0.08); color: var(--muted); }
+        .i-raffle-hero { text-align: center; background: var(--surface); border-radius: 18px; padding: 20px; margin-bottom: 16px; }
+        .i-raffle-total { font-size: 34px; font-weight: 800; color: var(--gold); }
+        .i-raffle-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+        .i-raffle-mine { font-size: 13px; margin-top: 10px; color: var(--cream); }
+        .i-prize-list li { font-size: 14px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .i-note { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 14px; }
+        .i-history-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .i-history-row span:first-child { color: var(--muted); }
+        .i-tabbar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 440px; display: flex; background: var(--surface); border-top: 1px solid rgba(255,255,255,0.08); padding: 8px 6px calc(8px + env(safe-area-inset-bottom)); z-index: 20; }
+        .i-tabbar button { flex: 1; background: none; border: none; color: var(--muted); font-size: 11px; padding: 6px 0; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+        .i-tabbar button .ic { font-size: 18px; }
+        .i-tabbar button.active { color: var(--gold); }
+        .i-toast { position: fixed; left: 50%; bottom: 86px; transform: translateX(-50%); background: var(--surface-2); border: 1px solid rgba(224,168,62,0.4); padding: 10px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 30; white-space: nowrap; }
+        .i-admin-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+        .i-admin-row input { flex: 1; background: var(--surface-2); border: 1px solid rgba(255,255,255,0.12); color: var(--cream); border-radius: 10px; padding: 9px 10px; font-size: 13px; min-width: 0; }
+        .i-admin-row button.rm { background: rgba(255,255,255,0.08); color: var(--muted); border: none; border-radius: 8px; width: 28px; height: 28px; flex-shrink: 0; }
+        .i-admin-add { background: var(--surface-2); color: var(--gold); border: 1px dashed rgba(224,168,62,0.4); border-radius: 10px; padding: 8px; font-size: 12.5px; font-weight: 700; width: 100%; margin-bottom: 14px; }
+        .i-admin-save { background: var(--gold); color: #221a00; border: none; border-radius: 12px; padding: 12px; font-weight: 800; font-size: 14px; width: 100%; margin-top: 4px; }
+        .i-admin-danger { background: var(--surface-2); color: #e58c8c; border: 1px solid rgba(229,140,140,0.3); border-radius: 12px; padding: 10px; font-weight: 700; font-size: 13px; width: 100%; margin-top: 8px; }
+        .i-admin-msg { text-align: center; font-size: 13px; color: var(--gold); margin-top: 8px; font-weight: 700; }
+        .i-pin-input { text-align: center; letter-spacing: 6px; font-size: 22px; }
+      `}</style>
+
+      {tab === 'domu' && (
+        <>
+          <div className="i-hero">
+            <button className="i-gear" onClick={openAdmin}>⚙️</button>
+            <h1>{BUSINESS.name}</h1>
+            <div className="i-owner">{BUSINESS.owner}</div>
+            <p>{TAGLINE}</p>
+            <div className="i-social-row">
+              {config.contact.facebook && <a href={config.contact.facebook} target="_blank" rel="noreferrer">📘 Facebook</a>}
+              {config.contact.instagram && <a href={config.contact.instagram} target="_blank" rel="noreferrer">📸 Instagram</a>}
+              <a href="#" onClick={e => { e.preventDefault(); shareApp(); }}>🔗 Sdílet</a>
+            </div>
+          </div>
+          <div className="i-content">
+            <div className="i-game-teaser">
+              <h3>🎫 Sbírej losy a vyhraj!</h3>
+              <p>Za masáž, dobrotu ze stánku i drobné úkoly získáváš losy — stírej výhry a hraj kolo štěstí.</p>
+              <button onClick={() => setTab('hra')}>Otevřít hru</button>
+            </div>
+
+            <div className="i-section-title">Služby</div>
+            {config.services.map((s, i) => (
+              <div className="i-card i-service" key={i}>
+                <div>
+                  <div className="i-service-name">{s.name}</div>
+                  <div className="i-service-desc">{s.desc}</div>
+                </div>
+                <div className="i-service-price">{s.price || 'cena na dotaz'}</div>
+              </div>
+            ))}
+
+            <div className="i-section-title" style={{ marginTop: 18 }}>Stánek u Iris</div>
+            <div className="i-card">
+              {config.standItems.map((it, i) => (
+                <div className="i-stand-row" key={i}><span>{it.name}</span><span>{it.price || 'cena na dotaz'}</span></div>
+              ))}
+            </div>
+
+            <div className="i-section-title" style={{ marginTop: 18 }}>Ze stánku a z akcí</div>
+            <div className="i-gallery">
+              {GALLERY.slice(0, 8).map((src, i) => (
+                <img key={i} src={src} alt={`Masáže Iris ${i + 1}`} />
+              ))}
+            </div>
+            {GALLERY.length > 8 && (
+              <>
+                {galleryOpen && (
+                  <div className="i-gallery" style={{ marginTop: 6 }}>
+                    {GALLERY.slice(8).map((src, i) => (
+                      <img key={i + 8} src={src} alt={`Masáže Iris ${i + 9}`} />
+                    ))}
+                  </div>
+                )}
+                <button className="i-gallery-toggle" onClick={() => setGalleryOpen(o => !o)}>
+                  {galleryOpen ? 'Skrýt fotky' : `📁 Zobrazit dalších ${GALLERY.length - 8} fotek`}
+                </button>
+              </>
+            )}
+            <div className="i-badge-row">
+              <span className="i-badge">🏆 1. místo — Guláš den Bohušov</span>
+              <span className="i-badge">🥈 2. místo — Guláš bez hranic</span>
+            </div>
+
+            <div className="i-section-title" style={{ marginTop: 18 }}>Kontakt a objednání</div>
+            <div className="i-card i-contact">
+              <a href={`tel:${config.contact.phone.replace(/\s/g, '')}`}>📞 {config.contact.phone}</a>
+              <a href={`mailto:${config.contact.email}`}>✉️ {config.contact.email}</a>
+            </div>
+            <a className="i-cta" href={`tel:${config.contact.phone.replace(/\s/g, '')}`}>Zavolat a objednat se</a>
+
+            {feed.length > 0 && (
+              <>
+                <div className="i-section-title" style={{ marginTop: 22 }}>Nedávné výhry</div>
+                <div className="i-card">
+                  {feed.slice(0, 6).map((f, i) => (
+                    <div className="i-feed-item" key={i}>Někdo právě vyhrál/a <b>{f.label}</b></div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+      {tab === 'hra' && (
+        <div className="i-content" style={{ paddingTop: 20 }}>
+          <div className="i-tickets-bar">
+            <div>
+              <div className="i-tickets-count">🎫 {state.losy}</div>
+              <div className="i-tickets-label">tvoje losy</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div className="i-tickets-count" style={{ fontSize: 16, color: 'var(--muted)' }}>{state.raffleEntries}</div>
+              <div className="i-tickets-label">vstupů do slosování</div>
+            </div>
+          </div>
+
+          <div className="i-scratch-cta">
+            <h3 style={{ fontFamily: 'Georgia, serif', fontSize: 17 }}>Stírací los</h3>
+            <p style={{ fontSize: 12.5, color: 'var(--muted)', margin: '4px 0 0' }}>1 los = 1 stírání, výhry hned</p>
+            <button disabled={state.losy < 1} onClick={openScratch}>Stírat los</button>
+          </div>
+
+          <div className="i-wheel-wrap">
+            <div className="i-section-title" style={{ alignSelf: 'flex-start' }}>Kolo štěstí — {WHEEL_COST} losů</div>
+            <div className="i-wheel-outer">
+              <div className="i-wheel-pointer" />
+              <svg className="i-wheel-svg" viewBox="0 0 220 220" style={{ transform: `rotate(${wheelRotation}deg)` }}>
+                {WHEEL_PRIZES.map((p, i) => {
+                  const seg = 360 / WHEEL_PRIZES.length;
+                  const start = i * seg, end = start + seg;
+                  const r = 108, cx = 110, cy = 110;
+                  const toXY = (deg) => [cx + r * Math.sin(deg * Math.PI / 180), cy - r * Math.cos(deg * Math.PI / 180)];
+                  const [x1, y1] = toXY(start), [x2, y2] = toXY(end);
+                  const colors = ['#c96a3f', '#e0a83e'];
+                  const mid = start + seg / 2;
+                  const [lx, ly] = toXY(mid);
+                  return (
+                    <g key={i}>
+                      <path d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 0 1 ${x2},${y2} Z`} fill={colors[i % 2]} stroke="#1c2a1e" strokeWidth="1.5" />
+                      <text x={lx} y={ly} fill="#221a00" fontSize="7.5" fontWeight="700" textAnchor="middle" transform={`rotate(${mid}, ${lx}, ${ly})`}>
+                        {p.label.length > 16 ? p.label.slice(0, 15) + '…' : p.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+              <div className="i-wheel-hub" />
+            </div>
+            <button className="i-wheel-btn" disabled={state.losy < WHEEL_COST || wheelSpinning} onClick={spinWheel}>
+              {wheelSpinning ? 'Točí se…' : `Roztočit kolo (${WHEEL_COST} 🎫)`}
+            </button>
+            <div className="i-wheel-result">{!wheelSpinning && wheelResult ? `Výhra: ${wheelResult.label} 🎉` : ''}</div>
+          </div>
+
+          <div className="i-section-title">Máš kód z masáže nebo stánku?</div>
+          <div className="i-card">
+            <div className="i-code-row">
+              <input value={codeInput} onChange={e => { setCodeInput(e.target.value); setCodeMsg(''); }} placeholder="ZADEJ KÓD" />
+              <button onClick={redeemCode}>OK</button>
+            </div>
+            {codeMsg && <div className="i-code-msg">{codeMsg}</div>}
+          </div>
+
+          <div className="i-section-title" style={{ marginTop: 18 }}>Úkoly na losy</div>
+          {TASKS_BASE.filter(t => !t.socialKey || config.contact[t.socialKey]).map(task => {
+            const last = state.completions[task.id];
+            const onCooldown = last && task.cooldownMs !== Infinity && now - last < task.cooldownMs;
+            const doneForever = last && task.cooldownMs === Infinity;
+            const disabled = onCooldown || doneForever || busyTask === task.id;
+            return (
+              <div className={`i-task ${disabled ? 'done' : ''}`} key={task.id}>
+                <div>
+                  <div className="i-task-title">{task.title}</div>
+                  <div className="i-task-desc">{task.desc}</div>
+                </div>
+                <button disabled={disabled} onClick={() => completeTask(task)}>
+                  {busyTask === task.id ? '…' : doneForever ? 'Hotovo' : onCooldown ? fmtCountdown(task.cooldownMs - (now - last)) : `+${task.reward}`}
+                </button>
+              </div>
+            );
+          })}
+
+          {(state.scratchHistory.length > 0 || state.wheelHistory.length > 0) && (
+            <>
+              <div className="i-section-title" style={{ marginTop: 18 }}>Tvoje historie</div>
+              <div className="i-card">
+                {[...state.scratchHistory, ...state.wheelHistory]
+                  .sort((a, b) => b.date - a.date).slice(0, 8)
+                  .map(h => (
+                    <div className="i-history-row" key={h.id}>
+                      <span>{new Date(h.date).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      <span>{h.label}</span>
+                    </div>
+                  ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {tab === 'slosovani' && (
+        <div className="i-content" style={{ paddingTop: 20 }}>
+          <div className="i-raffle-hero">
+            <div className="i-raffle-total">{raffleTotal === null ? '…' : raffleTotal}</div>
+            <div className="i-raffle-sub">vstupů celkem od všech hráčů</div>
+            <div className="i-raffle-mine">Ty máš <b>{state.raffleEntries}</b> {state.raffleEntries === 1 ? 'vstup' : 'vstupy'}</div>
+          </div>
+          <div className="i-section-title">Jak získat vstup</div>
+          <div className="i-card">
+            <div className="i-stand-row"><span>Roztočení kola štěstí</span><span>+1 vstup</span></div>
+            <div className="i-stand-row"><span>Výhra „Extra los do slosování“</span><span>+1 vstup</span></div>
+          </div>
+          <div className="i-section-title" style={{ marginTop: 18 }}>Velké ceny</div>
+          <div className="i-card">
+            <ul className="i-prize-list" style={{ margin: 0, paddingLeft: 18 }}>
+              <li>Masážní balíček 3× 60 min</li>
+              <li>Dárkový koš dobrot ze stánku</li>
+              <li>Poukaz 1000 Kč na masáže</li>
+            </ul>
+          </div>
+          <p className="i-note">Slosování probíhá naživo — termín a výsledky {BUSINESS.owner} oznámí na Facebooku Masáže Iris. Počítadlo vstupů je sdílené mezi všemi hráči appky.</p>
+        </div>
+      )}
+
+      <div className="i-tabbar">
+        <button className={tab === 'domu' ? 'active' : ''} onClick={() => setTab('domu')}><span className="ic">🏡</span>Domů</button>
+        <button className={tab === 'hra' ? 'active' : ''} onClick={() => setTab('hra')}><span className="ic">🎫</span>Losy a kolo</button>
+        <button className={tab === 'slosovani' ? 'active' : ''} onClick={() => setTab('slosovani')}><span className="ic">🏆</span>Slosování</button>
+      </div>
+
+      {scratchOpen && (
+        <div className="i-modal-backdrop" onClick={closeScratch}>
+          <div className="i-modal" onClick={e => e.stopPropagation()}>
+            <h3 style={{ fontFamily: 'Georgia, serif', fontSize: 18 }}>Stírací los</h3>
+            <div className="i-scratch-frame">
+              <div className="i-scratch-inner">
+                <div className="i-prize-layer" style={{ color: scratchResult?.win ? 'var(--gold)' : 'var(--muted)' }}>{scratchResult?.label}</div>
+                <canvas ref={canvasRef} width={CANVAS_W} height={CANVAS_H} className="i-canvas"
+                  onMouseDown={onStart} onMouseMove={onMove} onMouseUp={onEnd} onMouseLeave={onEnd}
+                  onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} />
+              </div>
+            </div>
+            <button className="close" onClick={closeScratch}>Zavřít</button>
+          </div>
+        </div>
+      )}
+
+      {adminOpen && (
+        <div className="i-modal-backdrop" onClick={closeAdmin}>
+          <div className="i-modal" onClick={e => e.stopPropagation()} style={{ textAlign: 'left', maxWidth: 380 }}>
+            {!adminUnlocked ? (
+              <>
+                <h3 style={{ textAlign: 'center', fontFamily: 'Georgia, serif', fontSize: 18, marginBottom: 14 }}>Administrace</h3>
+                <input className="i-pin-input" value={pinInput} onChange={e => setPinInput(e.target.value)} type="password" inputMode="numeric" placeholder="PIN" style={{ width: '100%', background: 'var(--surface-2)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--cream)', borderRadius: 12, padding: 12, marginBottom: 10 }} />
+                {pinError && <div style={{ color: '#e58c8c', fontSize: 12.5, textAlign: 'center', marginBottom: 8 }}>{pinError}</div>}
+                <button className="i-admin-save" onClick={checkPin}>Odemknout</button>
+                <button className="close" style={{ width: '100%', marginTop: 8 }} onClick={closeAdmin}>Zavřít</button>
+              </>
+            ) : draft && (
+              <>
+                <h3 style={{ textAlign: 'center', fontFamily: 'Georgia, serif', fontSize: 18, marginBottom: 14 }}>Administrace</h3>
+
+                <div className="i-section-title">Kontakt a sociální sítě</div>
+                <div className="i-admin-row"><input value={draft.contact.phone} onChange={e => setDraft(d => ({ ...d, contact: { ...d.contact, phone: e.target.value } }))} placeholder="Telefon" /></div>
+                <div className="i-admin-row"><input value={draft.contact.email} onChange={e => setDraft(d => ({ ...d, contact: { ...d.contact, email: e.target.value } }))} placeholder="Email" /></div>
+                <div className="i-admin-row"><input value={draft.contact.facebook} onChange={e => setDraft(d => ({ ...d, contact: { ...d.contact, facebook: e.target.value } }))} placeholder="Odkaz na Facebook" /></div>
+                <div className="i-admin-row" style={{ marginBottom: 16 }}><input value={draft.contact.instagram} onChange={e => setDraft(d => ({ ...d, contact: { ...d.contact, instagram: e.target.value } }))} placeholder="Odkaz na Instagram" /></div>
+
+                <div className="i-section-title">Služby</div>
+                {draft.services.map((s, i) => (
+                  <div key={i} style={{ marginBottom: 10, background: 'var(--surface-2)', borderRadius: 10, padding: 8 }}>
+                    <div className="i-admin-row"><input value={s.name} onChange={e => updDraftField('services', i, 'name', e.target.value)} placeholder="Název" /><button className="rm" onClick={() => removeDraftRow('services', i)}>✕</button></div>
+                    <div className="i-admin-row"><input value={s.desc} onChange={e => updDraftField('services', i, 'desc', e.target.value)} placeholder="Popis" /></div>
+                    <div className="i-admin-row"><input value={s.price} onChange={e => updDraftField('services', i, 'price', e.target.value)} placeholder="Cena, např. 450 Kč / 60 min" /></div>
+                  </div>
+                ))}
+                <button className="i-admin-add" onClick={() => addDraftRow('services', { name: '', desc: '', price: '' })}>+ Přidat službu</button>
+
+                <div className="i-section-title">Stánek</div>
+                {draft.standItems.map((s, i) => (
+                  <div className="i-admin-row" key={i}>
+                    <input value={s.name} onChange={e => updDraftField('standItems', i, 'name', e.target.value)} placeholder="Položka" style={{ flex: 2 }} />
+                    <input value={s.price} onChange={e => updDraftField('standItems', i, 'price', e.target.value)} placeholder="Cena" />
+                    <button className="rm" onClick={() => removeDraftRow('standItems', i)}>✕</button>
+                  </div>
+                ))}
+                <button className="i-admin-add" onClick={() => addDraftRow('standItems', { name: '', price: '' })}>+ Přidat položku</button>
+
+                <div className="i-section-title">Kódy pro losy</div>
+                {draft.codesArr.map((c, i) => (
+                  <div className="i-admin-row" key={i}>
+                    <input value={c.code} onChange={e => updDraftField('codesArr', i, 'code', e.target.value.toUpperCase())} placeholder="KÓD" style={{ flex: 1.2 }} />
+                    <input value={c.losy} onChange={e => updDraftField('codesArr', i, 'losy', e.target.value)} placeholder="losů" type="number" style={{ flex: 0.7 }} />
+                    <input value={c.label} onChange={e => updDraftField('codesArr', i, 'label', e.target.value)} placeholder="popis" style={{ flex: 1.5 }} />
+                    <button className="rm" onClick={() => removeDraftRow('codesArr', i)}>✕</button>
+                  </div>
+                ))}
+                <button className="i-admin-add" onClick={() => addDraftRow('codesArr', { code: '', losy: 1, label: '' })}>+ Přidat kód</button>
+
+                <button className="i-admin-save" onClick={saveConfig}>Uložit vše</button>
+
+                <div className="i-section-title" style={{ marginTop: 18 }}>Slosování a feed</div>
+                <button className="i-admin-danger" onClick={resetRaffle}>Vynulovat počítadlo slosování</button>
+                <button className="i-admin-danger" onClick={clearFeed}>Vyčistit feed výher</button>
+
+                {adminMsg && <div className="i-admin-msg">{adminMsg}</div>}
+                <button className="close" style={{ width: '100%', marginTop: 14 }} onClick={closeAdmin}>Zavřít administraci</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {toast && <div className="i-toast">{toast}</div>}
+    </div>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<IrisApp />);
+</script>
+</body>
+</html>
