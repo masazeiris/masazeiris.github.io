@@ -7,173 +7,183 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="Masáže Iris" />
 <title>Masáže Iris | Irena Sručková, Osoblaha</title>
-<!-- React & Babel CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
-<!-- Tailwind CSS -->
+<!-- Pouze moderní, odlehčený Tailwind CSS pro stylování vzhledu -->
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   html, body { margin: 0; padding: 0; background: #1c2a1e; font-family: system-ui, -apple-system, sans-serif; color: #f3f4f6; }
-  #root { min-height: 100vh; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 </style>
 </head>
 <body>
-<div id="root"></div>
 
-<script type="text/babel" data-presets="react">
-const { useState } = React;
+  <div class="min-h-screen pb-24">
+    <!-- Hlavička -->
+    <header class="bg-[#142015] border-b border-[#2d4631] sticky top-0 z-50 px-4 py-3 flex justify-between items-center shadow-md">
+      <div>
+        <h1 class="text-base font-bold tracking-wide text-emerald-400">🌿 Masáže Iris</h1>
+        <p class="text-[10px] text-gray-400">Irena Sručková</p>
+      </div>
+      <nav class="flex gap-3 text-xs font-medium">
+        <button onclick="switchTab('home')" id="btn-home" class="text-emerald-400 underline transition cursor-pointer">Úvod</button>
+        <button onclick="switchTab('services')" id="btn-services" class="text-gray-300 transition cursor-pointer">Služby</button>
+        <button onclick="switchTab('vouchers')" id="btn-vouchers" class="text-gray-300 transition cursor-pointer">Poukazy</button>
+        <button onclick="switchTab('booking')" id="btn-booking" class="text-gray-300 transition cursor-pointer">Rezervace</button>
+      </nav>
+    </header>
 
-function App() {
-  const [activeTab, setActiveTab] = useState('home');
-  const [reservation, setReservation] = useState({ name: '', phone: '', service: 'Relaxační masáž', date: '', time: '' });
-  const [submitted, setSubmitted] = useState(false);
-
-  const services = [
-    { id: 1, name: 'Relaxační masáž', desc: 'Uvolňující masáž pro celkové uklidnění těla i mysli.' },
-    { id: 2, name: 'Sportovní masáž', desc: 'Intenzivnější techniky zaměřené na svalové napětí.' },
-    { id: 3, name: 'Medová detoxikační masáž', desc: 'Hloubková očista a prokrvení organismu.' },
-    { id: 4, name: 'Baňkování', desc: 'Účinná metoda uvolnění zatuhlých míst.' },
-    { id: 5, name: 'Lázeňské tepelné terapie', desc: 'Prohřívací procedury pro regeneraci.' }
-  ];
-
-  const vouchers = [
-    { value: '300 Kč', desc: 'Dárkový poukaz v hodnotě 300 Kč' },
-    { value: '500 Kč', desc: 'Dárkový poukaz v hodnotě 500 Kč' },
-    { value: '650 Kč', desc: 'Dárkový poukaz v hodnotě 650 Kč' },
-    { value: '1 000 Kč', desc: 'Dárkový poukaz v hodnotě 1 000 Kč' }
-  ];
-
-  const handleBooking = (e) => {
-    e.preventDefault();
-    if(!reservation.name || !reservation.phone) return;
-    setSubmitted(true);
-  };
-
-  return (
-    <div className="min-h-screen pb-24">
-      {/* Hlavička */}
-      <header className="bg-[#142015] border-b border-[#2d4631] sticky top-0 z-50 px-4 py-3 flex justify-between items-center shadow-md">
-        <div>
-          <h1 className="text-base font-bold tracking-wide text-emerald-400">🌿 Masáže Iris</h1>
-          <p className="text-[10px] text-gray-400">Irena Sručková</p>
+    <!-- Hlavní obsah webu -->
+    <main class="max-w-md mx-auto p-4">
+      
+      <!-- ZÁLOŽKA: ÚVOD -->
+      <div id="tab-home" class="tab-content active space-y-4">
+        <div class="rounded-2xl overflow-hidden shadow-lg border border-[#2d4631] bg-[#243727] p-5 text-center">
+          <!-- Fotka salonu ze složky images na GitHubu -->
+          <img src="images/salon.jpg" alt="Salon Masáže Iris" class="mx-auto rounded-xl mb-4 max-w-full h-auto" width={400}>
+          
+          <h2 class="text-xl font-bold mb-2 text-emerald-300">Profesionální péče o vaše tělo</h2>
+          <p class="text-gray-300 text-xs mb-4">Navštivte salon Masáže Iris v Osoblaze a dopřejte si zasloužený relax.</p>
+          <button onclick="switchTab('booking')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm shadow transition cursor-pointer">
+            Rezervovat termín
+          </button>
         </div>
-        <nav className="flex gap-3 text-xs font-medium">
-          <button onClick={() => setActiveTab('home')} className={`transition ${activeTab === 'home' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Úvod</button>
-          <button onClick={() => setActiveTab('services')} className={`transition ${activeTab === 'services' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Služby</button>
-          <button onClick={() => setActiveTab('vouchers')} className={`transition ${activeTab === 'vouchers' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Poukazy</button>
-          <button onClick={() => setActiveTab('booking')} className={`transition ${activeTab === 'booking' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Rezervace</button>
-        </nav>
-      </header>
 
-      {/* Obsah */}
-      <main className="max-w-md mx-auto p-4">
-        {activeTab === 'home' && (
-          <div className="space-y-4">
-            <div className="rounded-2xl overflow-hidden shadow-lg border border-[#2d4631] bg-[#243727] p-5 text-center">
-              {/* TADY JE MÍSTO PRO VAŠI FOTKU */}
-              <img src="images/salon.jpg" alt="Salon Masáže Iris" className="mx-auto rounded-xl mb-4 max-w-full h-auto" width={400} />
-              
-              <h2 className="text-xl font-bold mb-2 text-emerald-300">Profesionální péče o vaše tělo</h2>
-              <p className="text-gray-300 text-xs mb-4">Navštivte salon Masáže Iris v Osoblaze a dopřejte si zasloužený relax.</p>
-              <button 
-                onClick={() => setActiveTab('booking')} 
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm shadow transition">
-                Rezervovat termín
-              </button>
+        <div class="bg-[#243727] border border-[#2d4631] rounded-2xl p-4 shadow text-xs space-y-2">
+          <h3 class="font-bold text-emerald-300 text-sm mb-1">📍 Kontaktní údaje</h3>
+          <p class="text-gray-300"><b>Adresa:</b> Třešňová 83, Osoblaha</p>
+          <p class="text-gray-300"><b>Masérka:</b> Irena Sručková</p>
+          <p class="text-gray-300"><b>Telefon pro rezervace:</b> <a href="tel:+420731562727" class="text-emerald-400 font-semibold underline">+420 731 562 727</a></p>
+        </div>
+      </div>
+
+      <!-- ZÁLOŽKA: SLUŽBY -->
+      <div id="tab-services" class="tab-content space-y-3">
+        <h2 class="text-lg font-bold text-emerald-300 mb-2">Nabídka služeb</h2>
+        <div class="space-y-3" id="services-list">
+          <!-- Služby se automaticky vykreslí pomocí JavaScriptu níže -->
+        </div>
+      </div>
+
+      <!-- ZÁLOŽKA: POUKAZY -->
+      <div id="tab-vouchers" class="tab-content space-y-3">
+        <h2 class="text-lg font-bold text-emerald-300 mb-2">Dárkové poukazy</h2>
+        <p class="text-xs text-gray-300 mb-3">Darujte svým blízkým chvíle pohody formou dárkového poukazu na masáže dle vlastního výběru.</p>
+        <div class="space-y-3" id="vouchers-list">
+          <!-- Poukazy se automaticky vykreslí pomocí JavaScriptu níže -->
+        </div>
+      </div>
+
+      <!-- ZÁLOŽKA: REZERVACE -->
+      <div id="tab-booking" class="tab-content">
+        <div class="bg-[#243727] border border-[#2d4631] rounded-2xl p-4 shadow">
+          <h2 class="text-lg font-bold text-emerald-300 mb-3">Online Rezervace</h2>
+          
+          <!-- Hláška po úspěšném odeslání -->
+          <div id="success-message" class="hidden text-center py-6 space-y-3">
+            <div class="text-3xl">✅</div>
+            <h3 class="text-base font-bold text-white">Rezervace odeslána!</h3>
+            <p class="text-xs text-gray-300">Děkujeme, brzy vás budeme kontaktovat na čísle <span id="confirmed-phone" class="text-emerald-400 font-semibold"></span>.</p>
+            <button onclick="resetForm()" class="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs cursor-pointer">Zpět domů</button>
+          </div>
+
+          <!-- Rezervační formulář -->
+          <form id="booking-form" onsubmit="handleBooking(event)" class="space-y-3 text-xs">
+            <div>
+              <label class="block text-gray-400 mb-1">Vybraná služba</label>
+              <select id="res-service" class="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500">
+                <!-- Možnosti se automaticky načtou ze seznamu masáží -->
+              </select>
             </div>
-
-            <div className="bg-[#243727] border border-[#2d4631] rounded-2xl p-4 shadow text-xs space-y-2">
-              <h3 className="font-bold text-emerald-300 text-sm mb-1">📍 Kontaktní údaje</h3>
-              <p className="text-gray-300"><b>Adresa:</b> Třešňová 83, Osoblaha</p>
-              <p className="text-gray-300"><b>Masérka:</b> Irena Sručková</p>
-              <p className="text-gray-300"><b>Telefon pro rezervace:</b> <a href="tel:+420731562727" className="text-emerald-400 font-semibold underline">+420 731 562 727</a></p>
+            <div>
+              <label class="block text-gray-400 mb-1">Jméno a příjmení</label>
+              <input type="text" id="res-name" required placeholder="Jana Nováková" class="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500" />
             </div>
-          </div>
-        )}
+            <div>
+              <label class="block text-gray-400 mb-1">Telefon</label>
+              <input type="tel" id="res-phone" required placeholder="+420 731 562 727" class="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl mt-4 transition cursor-pointer">Odeslat</button>
+          </form>
+        </div>
+      </div>
 
-        {activeTab === 'services' && (
-          <div className="space-y-3">
-            <h2 className="text-lg font-bold text-emerald-300 mb-2">Nabídka služeb</h2>
-            {services.map(s => (
-              <div key={s.id} className="bg-[#243727] border border-[#2d4631] rounded-xl p-3 shadow">
-                <h3 className="font-semibold text-white text-sm mb-1">{s.name}</h3>
-                <p className="text-xs text-gray-300">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        )}
+    </main>
+  </div>
 
-        {activeTab === 'vouchers' && (
-          <div className="space-y-3">
-            <h2 className="text-lg font-bold text-emerald-300 mb-2">Dárkové poukazy</h2>
-            <p className="text-xs text-gray-300 mb-3">Darujte svým blízkým chvíle pohody formou dárkového poukazu na masáže dle vlastního výběru.</p>
-            {vouchers.map((v, i) => (
-              <div key={i} className="bg-[#243727] border border-[#2d4631] rounded-xl p-3 shadow flex justify-between items-center">
-                <div>
-                  <h3 className="font-semibold text-white text-sm">{v.value}</h3>
-                  <p className="text-[11px] text-gray-300">{v.desc}</p>
-                </div>
-                <a 
-                  href="tel:+420731562727" 
-                  className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg">
-                  Objednat
-                </a>
-              </div>
-            ))}
-          </div>
-        )}
+  <!-- Rychlý čistý JavaScript spouštěný přímo prohlížečem -->
+  <script>
+    // Kompletní seznam vašich masáží na jednom přehledném místě
+    const services = [
+      { name: 'Relaxační masáž', desc: 'Uvolňující masáž pro celkové uklidnění těla i mysli.' },
+      { name: 'Sportovní masáž', desc: 'Intenzivnější techniky zaměřené na svalové napětí.' },
+      { name: 'Medová detoxikační masáž', desc: 'Hloubková očista a prokrvení organismu.' },
+      { name: 'Baňkování', desc: 'Účinná metoda uvolnění zatuhlých míst.' },
+      { name: 'Lázeňské tepelné terapie', desc: 'Prohřívací procedury pro regeneraci.' }
+    ];
 
-        {activeTab === 'booking' && (
-          <div className="bg-[#243727] border border-[#2d4631] rounded-2xl p-4 shadow">
-            <h2 className="text-lg font-bold text-emerald-300 mb-3">Online Rezervace</h2>
-            {submitted ? (
-              <div className="text-center py-6 space-y-3">
-                <div className="text-3xl">✅</div>
-                <h3 className="text-base font-bold text-white">Rezervace odeslána!</h3>
-                <p className="text-xs text-gray-300">Děkujeme, brzy vás budeme kontaktovat na čísle <span className="text-emerald-400 font-semibold">{reservation.phone}</span>.</p>
-                <button onClick={() => { setSubmitted(false); setActiveTab('home'); }} className="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs">Zpět domů</button>
-              </div>
-            ) : (
-              <form onSubmit={handleBooking} className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-gray-400 mb-1">Vybraná služba</label>
-                  <select 
-                    value={reservation.service} 
-                    onChange={e => setReservation({...reservation, service: e.target.value})}
-                    className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500">
-                    {services.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-gray-400 mb-1">Jméno a příjmení</label>
-                  <input 
-                    type="text" required placeholder="Jana Nováková"
-                    value={reservation.name} 
-                    onChange={e => setReservation({...reservation, name: e.target.value})}
-                    className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500" />
-                </div>
-                <div>
-                  <label className="block text-gray-400 mb-1">Telefon</label>
-                  <input 
-                    type="tel" required placeholder="+420 731 562 727"
-                    value={reservation.phone} 
-                    onChange={e => setReservation({...reservation, phone: e.target.value})}
-                    className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500" />
-                </div>
-                <button type="submit" className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl mt-4 transition">Odeslat</button>
-              </form>
-            )}
-          </div>
-        )}
-      </main>
-    </div>
-  );
-}
+    // Seznam dárkových poukazů
+    const vouchers = [
+      { value: '300 Kč', desc: 'Dárkový poukaz v hodnotě 300 Kč' },
+      { value: '500 Kč', desc: 'Dárkový poukaz v hodnotě 500 Kč' },
+      { value: '650 Kč', desc: 'Dárkový poukaz v hodnotě 650 Kč' },
+      { value: '1 000 Kč', desc: 'Dárkový poukaz v hodnotě 1 000 Kč' }
+    ];
 
-// Spuštění samotné aplikace a propojení s HTML div#root
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
-</script>
+    // Vygenerování obsahu ihned po načtení stránky
+    window.onload = function() {
+      const servicesDiv = document.getElementById('services-list');
+      const selectEl = document.getElementById('res-service');
+      services.forEach(s => {
+        servicesDiv.innerHTML += `<div class="bg-[#243727] border border-[#2d4631] rounded-xl p-3 shadow">
+          <h3 class="font-semibold text-white text-sm mb-1">${s.name}</h3>
+          <p class="text-xs text-gray-300">${s.desc}</p>
+        </div>`;
+        selectEl.innerHTML += `<option>${s.name}</option>`;
+      });
+
+      const vouchersDiv = document.getElementById('vouchers-list');
+      vouchers.forEach(v => {
+        vouchersDiv.innerHTML += `<div class="bg-[#243727] border border-[#2d4631] rounded-xl p-3 shadow flex justify-between items-center">
+          <div>
+            <h3 class="font-semibold text-white text-sm">${v.value}</h3>
+            <p class="text-[11px] text-gray-300">${v.desc}</p>
+          </div>
+          <a href="tel:+420731562727" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition">Objednat</a>
+        </div>`;
+      });
+    };
+
+    // Obsluha přepínání záložek menu
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      
+      document.querySelectorAll('nav button').forEach(btn => {
+        btn.classList.remove('text-emerald-400', 'underline');
+        btn.classList.add('text-gray-300');
+      });
+      const activeBtn = document.getElementById('btn-' + tabId);
+      activeBtn.classList.remove('text-gray-300');
+      activeBtn.classList.add('text-emerald-400', 'underline');
+    }
+
+    // Odeslání formuláře
+    function handleBooking(e) {
+      e.preventDefault();
+      const phoneInput = document.getElementById('res-phone').value;
+      document.getElementById('confirmed-phone').innerText = phoneInput;
+      
+      document.getElementById('booking-form').classList.add('hidden');
+      document.getElementById('success-message').classList.remove('hidden');
+    }
+
+    // Návrat z potvrzení zpět na úvodní stránku
+    function resetForm() {
+      document.getElementById('booking-form').reset();
+      document.getElementById('booking-form').classList.remove('hidden');
+      document.getElementById('success-message').classList.add('hidden');
+      switchTab('home');
+    }
+  </script>
 </body>
 </html>
