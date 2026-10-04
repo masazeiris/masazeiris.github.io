@@ -93,16 +93,9 @@ function App() {
           <div className="space-y-3">
             <h2 className="text-lg font-bold text-emerald-300 mb-2">Nabídka služeb</h2>
             {services.map(s => (
-              <div key={s.id} className="bg-[#243727] border border-[#2d4631] rounded-xl p-3 shadow flex flex-col justify-between">
-                <div>
-                  <h3 className="font-semibold text-white text-sm mb-1">{s.name}</h3>
-                  <p className="text-xs text-gray-300 mb-3">{s.desc}</p>
-                </div>
-                <button 
-                  onClick={() => { setReservation({...reservation, service: s.name}); setActiveTab('booking'); }}
-                  className="self-end px-3 py-1.5 bg-emerald-700/50 hover:bg-emerald-600 text-emerald-200 text-xs font-semibold rounded-lg transition">
-                  Vybrat
-                </button>
+              <div key={s.id} className="bg-[#243727] border border-[#2d4631] rounded-xl p-3 shadow">
+                <h3 className="font-semibold text-white text-sm mb-1">{s.name}</h3>
+                <p className="text-xs text-gray-300">{s.desc}</p>
               </div>
             ))}
           </div>
