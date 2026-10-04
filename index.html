@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masáže Iris</title>
+    <title>Masáže Iris - Kladno</title>
     <style>
         :root {
             --bg-main: #1c2a1e;
             --bg-card: #223325;
-            --bg-[#162218]: #162218;
+            --bg-header: #162218;
             --primary: #059669;
             --primary-hover: #10b981;
+            --accent: #ba005d;
             --text-main: #f3f4f6;
             --text-muted: #a7f3d0;
             --border: rgba(6, 78, 59, 0.5);
@@ -22,12 +23,12 @@
         header { position: sticky; top: 0; background-color: rgba(22, 34, 24, 0.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); z-index: 50; }
         .nav-container { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; }
         .logo { display: flex; align-items: center; gap: 0.75rem; font-family: Georgia, serif; font-size: 1.25rem; font-weight: bold; cursor: pointer; color: #ecfdf5; }
-        .logo-icon { width: 36px; height: 36px; border-radius: 50%; background: rgba(4, 120, 87, 0.4); border: 1px solid rgba(16, 185, 129, 0.3); display: flex; align-items: center; justify-content: center; }
+        .logo-icon { width: 36px; height: 36px; border-radius: 50%; background: rgba(186, 0, 93, 0.3); border: 1px solid var(--accent); display: flex; align-items: center; justify-content: center; color: #fff; }
         
-        nav { display: flex; gap: 0.5rem; }
+        nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
         .nav-btn { background: none; border: none; color: var(--text-muted); padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
         .nav-btn:hover, .nav-btn.active { background: rgba(6, 78, 59, 0.6); color: #fff; }
-        .btn-primary { background: var(--primary); color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 9999px; cursor: pointer; font-weight: 500; transition: background 0.2s; }
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 9999px; cursor: pointer; font-weight: 500; text-decoration: none; display: inline-block; transition: background 0.2s; }
         .btn-primary:hover { background: var(--primary-hover); }
 
         main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; flex: 1; width: 100%; }
@@ -40,11 +41,13 @@
         .hero p { color: var(--text-muted); max-width: 600px; margin: 0 auto 1.5rem auto; line-height: 1.6; }
 
         /* Grid & Cards */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
-        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-img { width: 100%; height: 200px; object-fit: cover; border-bottom: 1px solid var(--border); background-color: #162218; }
+        .card-body { padding: 1.25rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between; }
         .card h3 { font-size: 1.2rem; color: #ecfdf5; margin-bottom: 0.5rem; }
         .price { font-size: 1.25rem; font-weight: bold; color: #34d399; }
-        .badge { display: inline-block; background: rgba(6, 78, 59, 0.6); color: var(--text-muted); font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 9999px; margin-bottom: 0.75rem; }
+        .badge { display: inline-block; background: rgba(6, 78, 59, 0.6); color: var(--text-muted); font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 9999px; margin-bottom: 0.75rem; align-self: flex-start; }
 
         /* Forms */
         form { background: var(--bg-card); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.5rem; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
@@ -55,16 +58,16 @@
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
         /* Gallery */
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
-        .gallery-item { aspect-ratio: 16/9; background: var(--bg-card); border-radius: 0.5rem; overflow: hidden; border: 1px solid var(--border); }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+        .gallery-item { aspect-ratio: 4/3; background: var(--bg-card); border-radius: 0.5rem; overflow: hidden; border: 1px solid var(--border); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .gallery-item:hover img { transform: scale(1.05); }
 
         /* Reviews */
         .review-card { background: var(--bg-card); border: 1px solid var(--border); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
         .stars { color: #fbbf24; margin: 0.25rem 0; }
 
-        footer { background: var(--bg-[#162218]); border-top: 1px solid var(--border); text-align: center; padding: 1.5rem; font-size: 0.8rem; color: var(--text-muted); }
-        
+        footer { background: var(--bg-header); border-top: 1px solid var(--border); text-align: center; padding: 1.5rem; font-size: 0.8rem; color: var(--text-muted); }
         .alert { background: rgba(5, 150, 105, 0.2); border: 1px solid var(--primary); color: #ecfdf5; padding: 0.75rem; border-radius: 0.5rem; text-align: center; margin-bottom: 1rem; display: none; }
 
         @media (max-width: 640px) {
@@ -83,13 +86,13 @@
             </div>
             <nav>
                 <button class="nav-btn active" onclick="switchTab('home')">Úvod</button>
-                <button class="nav-btn" onclick="switchTab('services')">Ceník</button>
+                <button class="nav-btn" onclick="switchTab('services')">Služby a Ceník</button>
                 <button class="nav-btn" onclick="switchTab('booking')">Rezervace</button>
                 <button class="nav-btn" onclick="switchTab('gallery')">Galerie</button>
                 <button class="nav-btn" onclick="switchTab('reviews')">Hodnocení</button>
                 <button class="nav-btn" onclick="switchTab('contact')">Kontakt</button>
             </nav>
-            <button class="btn-primary" onclick="switchTab('booking')">Rezervovat</button>
+            <a href="tel:+420797862332" class="btn-primary">📞 Rezervovat</a>
         </div>
     </header>
 
@@ -98,35 +101,35 @@
         <section id="home" class="tab-content active">
             <div class="hero">
                 <h1>Ochutnejte hlubokou relaxaci</h1>
-                <p>Vítejte v oáze klidu studia Masáže Iris. Nabízíme profesionální masáže přizpůsobené vašim individuálním potřebám.</p>
+                <p>Vítejte v oáze klidu studia Masáže Iris Irena Stručková. Nabízíme profesionální sportovní, relaxační masáže, maderoterapii, baňkování a exkluzivní techniky pro vaše zdraví a pohodu.</p>
                 <button class="btn-primary" onclick="switchTab('booking')">Online Rezervace</button>
             </div>
             <div class="grid">
-                <div class="card">
+                <div class="card" style="padding: 1.5rem;">
                     <h3>Individuální přístup</h3>
                     <p style="color: var(--text-muted); font-size: 0.9rem;">Každá masáž je přizpůsobena vašim aktuálním fyzickým a psychickým potřebám.</p>
                 </div>
-                <div class="card">
-                    <h3>Přírodní oleje</h3>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Používáme výhradně kvalitní přírodní oleje a esence nejvyšší čistoty.</p>
+                <div class="card" style="padding: 1.5rem;">
+                    <h3>Přírodní péče</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Používáme kvalitní přírodní oleje, med, baňky i bylinné tyčinky na tygrování.</p>
                 </div>
-                <div class="card">
+                <div class="card" style="padding: 1.5rem;">
                     <h3>Klidné prostředí</h3>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Příjemný prostor navržený tak, abyste zahodili starosti všedních dnů.</p>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Příjemný prostor v Kladně navržený tak, abyste zahodili starosti všedních dnů.</p>
                 </div>
             </div>
         </section>
 
         <!-- Services Tab -->
         <section id="services" class="tab-content">
-            <h2 style="margin-bottom: 1.5rem; font-family: Georgia, serif;">Ceník a Služby</h2>
+            <h2 style="margin-bottom: 1.5rem; font-family: Georgia, serif;">Služby a Ceník</h2>
             <div class="grid" id="services-container"></div>
         </section>
 
         <!-- Booking Tab -->
         <section id="booking" class="tab-content">
             <h2 style="margin-bottom: 1.5rem; font-family: Georgia, serif; text-align: center;">Rezervace Masáže</h2>
-            <div id="booking-alert" class="alert">Rezervace byla úspěšně uložena!</div>
+            <div id="booking-alert" class="alert">Rezervace byla úspěšně odeslána a uložena!</div>
             <form id="booking-form" onsubmit="handleBooking(event)">
                 <div class="form-group">
                     <label>Vyberte službu</label>
@@ -153,12 +156,12 @@
                     </div>
                     <div class="form-group">
                         <label>Telefon</label>
-                        <input type="tel" id="booking-phone" placeholder="+420 123 456 789" required>
+                        <input type="tel" id="booking-phone" placeholder="+420 797 862 332" required>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Poznámka</label>
-                    <textarea id="booking-note" rows="3" placeholder="Zdravotní omezení nebo přání..."></textarea>
+                    <textarea id="booking-note" rows="3" placeholder="Zdravotní omezení nebo speciální přání..."></textarea>
                 </div>
                 <button type="submit" class="btn-primary" style="width: 100%; padding: 0.75rem;">Odeslat rezervaci</button>
             </form>
@@ -171,7 +174,7 @@
 
         <!-- Gallery Tab -->
         <section id="gallery" class="tab-content">
-            <h2 style="margin-bottom: 1.5rem; font-family: Georgia, serif;">Fotogalerie</h2>
+            <h2 style="margin-bottom: 1.5rem; font-family: Georgia, serif;">Fotogalerie ze Studia</h2>
             <div class="gallery-grid" id="gallery-container"></div>
         </section>
 
@@ -207,21 +210,21 @@
         <section id="contact" class="tab-content">
             <h2 style="margin-bottom: 1.5rem; font-family: Georgia, serif;">Kontakt & Adresa</h2>
             <div class="grid">
-                <div class="card">
+                <div class="card" style="padding: 1.5rem;">
                     <h3>Masáže Iris</h3>
                     <p style="color: var(--text-muted); line-height: 1.8;">
-                        <strong>Adresa:</strong> Kladenská 123, Kladno<br>
-                        <strong>Telefon:</strong> +420 777 888 999<br>
-                        <strong>Email:</strong> info@masaze-iris.cz<br>
-                        <strong>IČO:</strong> 12345678
+                        <strong>Provozovatel:</strong> Irena Stručková<br>
+                        <strong>Adresa:</strong> Pařížská 2152, Kladno<br>
+                        <strong>Telefon:</strong> <a href="tel:+420797862332" style="color: #34d399;">+420 797 862 332</a><br>
+                        <strong>Email:</strong> info@masaze-iris.cz
                     </p>
                 </div>
-                <div class="card">
+                <div class="card" style="padding: 1.5rem;">
                     <h3>Otevírací doba</h3>
                     <p style="color: var(--text-muted); line-height: 1.8;">
+                        Dle předchozích telefonických či online objednávek.<br>
                         Pondělí - Pátek: 9:00 - 19:00<br>
-                        Sobota: 10:00 - 16:00<br>
-                        Neděle: Zavřeno
+                        Dárkové poukazy k dispozici na vyžádání.
                     </p>
                 </div>
             </div>
@@ -229,26 +232,64 @@
     </main>
 
     <footer>
-        © 2026 Masáže Iris. Všechna práva vyhrazena.
+        © 2026 Masáže Iris – Irena Stručková. Všechna práva vyhrazena.
     </footer>
 
     <script>
         const SERVICES = [
-            { id: '1', name: 'Relaxační masáž', duration: '60 min', price: 900, description: 'Jemná masáž určená k odstranění stresu, napětí a celkové regeneraci organismu.' },
-            { id: '2', name: 'Hloubková masáž', duration: '60 min', price: 1100, description: 'Zaměřená na hluboké svalové tkáně, uvolnění zatuhlých zad a šíje.' },
-            { id: '3', name: 'Aromaterapeutická masáž', duration: '90 min', price: 1400, description: 'Spojení doteku a esenciálních olejů pro maximální harmonii těla i mysli.' },
-            { id: '4', name: 'Lávové kameny', duration: '75 min', price: 1300, description: 'Teplo z lávových kamenů prostupuje hluboko do svalů a dokonalé uvolní tělo.' }
-        ];
-
-        const INITIAL_REVIEWS = [
-            { id: '1', name: 'Eva K.', rating: 5, text: 'Úžasný zážitek! Masáž lávovými kameny byla naprosto dokonalá.', date: '12. 05. 2025' },
-            { id: '2', name: 'Martin P.', rating: 5, text: 'Pravidelně chodím na hloubkovou masáž. Vždy odejdu bez bolesti zad.', date: '28. 08. 2025' }
+            { 
+                id: '1', 
+                name: 'Sportovní masáž', 
+                duration: '60 min', 
+                price: 1000, 
+                img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=500&auto=format&fit=crop&q=60',
+                description: 'Nastartování nervosvalového systému, vysoké tempo a hluboká razance pro přípravu na výkon i regeneraci.' 
+            },
+            { 
+                id: '2', 
+                name: 'Relaxační masáž', 
+                duration: '60 min', 
+                price: 900, 
+                img: 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=500&auto=format&fit=crop&q=60',
+                description: 'Ideální pro uvolnění těla i mysli, zmírnění stresu a podporu celkové vnitřní harmonie.' 
+            },
+            { 
+                id: '3', 
+                name: 'Medová detoxikační masáž', 
+                duration: '60 min', 
+                price: 1100, 
+                img: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=500&auto=format&fit=crop&q=60',
+                description: 'Využívá přírodních vlastností medu k detoxikaci organismu, prokrvení a zlepšení stavu pokožky.' 
+            },
+            { 
+                id: '4', 
+                name: 'Baňkování', 
+                duration: '45 min', 
+                price: 800, 
+                img: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=500&auto=format&fit=crop&q=60',
+                description: 'Tradiční metoda s podtlakem k efektivnímu uvolnění hlubokého svalového napětí a zlepšení krevního oběhu.' 
+            },
+            { 
+                id: '5', 
+                name: 'Tygrování', 
+                duration: '60 min', 
+                price: 1200, 
+                img: 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=500&auto=format&fit=crop&q=60',
+                description: 'Japonská technika s bylinnou tyčinkou a tepelnou stimulací. Extrémně efektivní pro uvolnění a úlevu od křečí či otoků.' 
+            }
         ];
 
         const GALLERY = [
             'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=500&auto=format&fit=crop&q=60',
+            'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=500&auto=format&fit=crop&q=60',
             'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=500&auto=format&fit=crop&q=60',
-            'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=500&auto=format&fit=crop&q=60'
+            'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=500&auto=format&fit=crop&q=60',
+            'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=500&auto=format&fit=crop&q=60'
+        ];
+
+        const INITIAL_REVIEWS = [
+            { id: '1', name: 'Eva K.', rating: 5, text: 'Úžasný zážitek! Tygrování a sportovní masáž mi neuvěřitelně pomohly od bolesti zad.', date: '12. 05. 2025' },
+            { id: '2', name: 'Martin P.', rating: 5, text: 'Vynikající přístup paní Stručkové a příjemné klidné prostředí. Vřele doporučuji!', date: '28. 08. 2025' }
         ];
 
         function switchTab(tabId) {
@@ -269,15 +310,18 @@
             
             container.innerHTML = SERVICES.map(s => `
                 <div class="card">
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <h3>${s.name}</h3>
-                            <span class="price">${s.price} Kč</span>
+                    <img src="${s.img}" alt="${s.name}" class="card-img" />
+                    <div class="card-body">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <h3>${s.name}</h3>
+                                <span class="price">${s.price} Kč</span>
+                            </div>
+                            <span class="badge">${s.duration}</span>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">${s.description}</p>
                         </div>
-                        <span class="badge">${s.duration}</span>
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">${s.description}</p>
+                        <button class="btn-primary" onclick="selectServiceForBooking('${s.id}')">Vybrat pro rezervaci</button>
                     </div>
-                    <button class="btn-primary" onclick="selectServiceForBooking('${s.id}')">Vybrat pro rezervaci</button>
                 </div>
             `).join('');
 
@@ -293,9 +337,9 @@
 
         function renderGallery() {
             const container = document.getElementById('gallery-container');
-            container.innerHTML = GALLERY.map(url => `
+            container.innerHTML = GALLERY.map((url, idx) => `
                 <div class="gallery-item">
-                    <img src="${url}" alt="Salon Iris" loading="lazy">
+                    <img src="${url}" alt="Masáže Iris fotka ${idx + 1}" loading="lazy">
                 </div>
             `).join('');
         }
@@ -388,7 +432,6 @@
             renderBookings();
         }
 
-        // Inicializace při načtení
         document.addEventListener('DOMContentLoaded', () => {
             renderServices();
             renderGallery();
