@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Masáže Iris" />
 <title>Masáže Iris | Irena Sručková, Osoblaha</title>
 <!-- Pouze moderní, odlehčený Tailwind CSS pro stylování vzhledu -->
-<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://tailwindcss.com"></script>
 <style>
   html, body { margin: 0; padding: 0; background: #1c2a1e; font-family: system-ui, -apple-system, sans-serif; color: #f3f4f6; }
   .tab-content { display: none; }
@@ -24,11 +24,12 @@
         <h1 class="text-base font-bold tracking-wide text-emerald-400">🌿 Masáže Iris</h1>
         <p class="text-[10px] text-gray-400">Irena Sručková</p>
       </div>
-      <nav class="flex gap-3 text-xs font-medium">
+      <nav class="flex gap-2.5 text-xs font-medium">
         <button onclick="switchTab('home')" id="btn-home" class="text-emerald-400 underline transition cursor-pointer">Úvod</button>
         <button onclick="switchTab('services')" id="btn-services" class="text-gray-300 transition cursor-pointer">Služby</button>
         <button onclick="switchTab('vouchers')" id="btn-vouchers" class="text-gray-300 transition cursor-pointer">Poukazy</button>
         <button onclick="switchTab('booking')" id="btn-booking" class="text-gray-300 transition cursor-pointer">Rezervace</button>
+        <button onclick="openAdmin()" id="btn-admin" class="text-gray-500 hover:text-emerald-300 transition cursor-pointer">🔑 Admin</button>
       </nav>
     </header>
 
@@ -38,9 +39,7 @@
       <!-- ZÁLOŽKA: ÚVOD -->
       <div id="tab-home" class="tab-content active space-y-4">
         <div class="rounded-2xl overflow-hidden shadow-lg border border-[#2d4631] bg-[#243727] p-5 text-center">
-          <!-- Fotka salonu ze složky images na GitHubu -->
-          <img src="images/salon.jpg" alt="Salon Masáže Iris" class="mx-auto rounded-xl mb-4 max-w-full h-auto" width={400}>
-          
+          <img src="images/salon.jpg" alt="Salon Masáže Iris" class="mx-auto rounded-xl mb-4 max-w-full h-auto" width="400">
           <h2 class="text-xl font-bold mb-2 text-emerald-300">Profesionální péče o vaše tělo</h2>
           <p class="text-gray-300 text-xs mb-4">Navštivte salon Masáže Iris v Osoblaze a dopřejte si zasloužený relax.</p>
           <button onclick="switchTab('booking')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm shadow transition cursor-pointer">
@@ -59,18 +58,14 @@
       <!-- ZÁLOŽKA: SLUŽBY -->
       <div id="tab-services" class="tab-content space-y-3">
         <h2 class="text-lg font-bold text-emerald-300 mb-2">Nabídka služeb</h2>
-        <div class="space-y-3" id="services-list">
-          <!-- Služby se automaticky vykreslí pomocí JavaScriptu níže -->
-        </div>
+        <div class="space-y-3" id="services-list"></div>
       </div>
 
       <!-- ZÁLOŽKA: POUKAZY -->
       <div id="tab-vouchers" class="tab-content space-y-3">
         <h2 class="text-lg font-bold text-emerald-300 mb-2">Dárkové poukazy</h2>
         <p class="text-xs text-gray-300 mb-3">Darujte svým blízkým chvíle pohody formou dárkového poukazu na masáže dle vlastního výběru.</p>
-        <div class="space-y-3" id="vouchers-list">
-          <!-- Poukazy se automaticky vykreslí pomocí JavaScriptu níže -->
-        </div>
+        <div class="space-y-3" id="vouchers-list"></div>
       </div>
 
       <!-- ZÁLOŽKA: REZERVACE -->
@@ -78,7 +73,6 @@
         <div class="bg-[#243727] border border-[#2d4631] rounded-2xl p-4 shadow">
           <h2 class="text-lg font-bold text-emerald-300 mb-3">Online Rezervace</h2>
           
-          <!-- Hláška po úspěšném odeslání -->
           <div id="success-message" class="hidden text-center py-6 space-y-3">
             <div class="text-3xl">✅</div>
             <h3 class="text-base font-bold text-white">Rezervace odeslána!</h3>
@@ -86,13 +80,10 @@
             <button onclick="resetForm()" class="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs cursor-pointer">Zpět domů</button>
           </div>
 
-          <!-- Rezervační formulář -->
           <form id="booking-form" onsubmit="handleBooking(event)" class="space-y-3 text-xs">
             <div>
               <label class="block text-gray-400 mb-1">Vybraná služba</label>
-              <select id="res-service" class="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500">
-                <!-- Možnosti se automaticky načtou ze seznamu masáží -->
-              </select>
+              <select id="res-service" class="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500"></select>
             </div>
             <div>
               <label class="block text-gray-400 mb-1">Jméno a příjmení</label>
@@ -107,12 +98,40 @@
         </div>
       </div>
 
+      <!-- ZÁLOŽKA: ADMIN MOD -->
+      <div id="tab-admin" class="tab-content space-y-4">
+        <div class="bg-[#142015] border border-[#3b593f] rounded-2xl p-4 shadow">
+          <div class="flex justify-between items-center border-b border-[#2d4631] pb-2 mb-3">
+            <h2 class="text-lg font-bold text-red-400">🛠️ Administrace salonu</h2>
+            <button onclick="logoutAdmin()" class="bg-red-900/50 text-red-300 text-2xl px-2.5 py-0.5 rounded-lg text-xs hover:bg-red-800 transition cursor-pointer">Odhlásit se</button>
+          </div>
+          
+          <!-- Výpis rezervací -->
+          <div class="space-y-2">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-1">📥 Přijaté Rezervace</h3>
+            <div id="admin-bookings-list" class="space-y-2 max-h-60 overflow-y-auto text-xs pr-1">
+              <!-- Rezervace se vypíšou sem -->
+            </div>
+          </div>
+
+          <!-- Výpis systémových logů -->
+          <div class="space-y-2 mt-5 pt-4 border-t border-[#2d4631]">
+            <div class="flex justify-between items-center mb-1">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">📊 Systémové Logy (Status webu)</h3>
+              <button onclick="clearLogs()" class="text-[10px] text-gray-500 hover:text-red-400 underline cursor-pointer">Smazat historii</button>
+            </div>
+            <div id="admin-system-logs" class="bg-[#101911] border border-[#233525] p-2 rounded-xl font-mono text-[10px] text-gray-400 max-h-40 overflow-y-auto space-y-1">
+              <!-- Technické logy se vypíšou sem -->
+            </div>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 
-  <!-- Rychlý čistý JavaScript spouštěný přímo prohlížečem -->
   <script>
-    // Kompletní seznam vašich masáží na jednom přehledném místě
+    // Seznam masáží
     const services = [
       { name: 'Relaxační masáž', desc: 'Uvolňující masáž pro celkové uklidnění těla i mysli.' },
       { name: 'Sportovní masáž', desc: 'Intenzivnější techniky zaměřené na svalové napětí.' },
@@ -129,8 +148,22 @@
       { value: '1 000 Kč', desc: 'Dárkový poukaz v hodnotě 1 000 Kč' }
     ];
 
-    // Vygenerování obsahu ihned po načtení stránky
+    // Pomocná funkce pro zápis systémových událostí
+    function logEvent(message) {
+      let sysLogs = JSON.parse(localStorage.getItem('sys_logs')) || [];
+      const timestamp = new Date().toLocaleString('cs-CZ');
+      sysLogs.unshift(`[${timestamp}] ${message}`);
+      localStorage.setItem('sys_logs', JSON.stringify(sysLogs));
+    }
+
+    // Inicializace dat ihned po otevření webu
     window.onload = function() {
+      // Záznam o startu aplikace
+      if (!localStorage.getItem('sys_logs')) {
+        logEvent("Systém úspěšně inicializován.");
+      }
+      logEvent("Stránka načtena uživatelem.");
+
       const servicesDiv = document.getElementById('services-list');
       const selectEl = document.getElementById('res-service');
       services.forEach(s => {
@@ -140,50 +173,9 @@
         </div>`;
         selectEl.innerHTML += `<option>${s.name}</option>`;
       });
+      logEvent(`Načteno ${services.length} masážních služeb do nabídky.`);
 
       const vouchersDiv = document.getElementById('vouchers-list');
       vouchers.forEach(v => {
         vouchersDiv.innerHTML += `<div class="bg-[#243727] border border-[#2d4631] rounded-xl p-3 shadow flex justify-between items-center">
           <div>
-            <h3 class="font-semibold text-white text-sm">${v.value}</h3>
-            <p class="text-[11px] text-gray-300">${v.desc}</p>
-          </div>
-          <a href="tel:+420731562727" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition">Objednat</a>
-        </div>`;
-      });
-    };
-
-    // Obsluha přepínání záložek menu
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.getElementById('tab-' + tabId).classList.add('active');
-      
-      document.querySelectorAll('nav button').forEach(btn => {
-        btn.classList.remove('text-emerald-400', 'underline');
-        btn.classList.add('text-gray-300');
-      });
-      const activeBtn = document.getElementById('btn-' + tabId);
-      activeBtn.classList.remove('text-gray-300');
-      activeBtn.classList.add('text-emerald-400', 'underline');
-    }
-
-    // Odeslání formuláře
-    function handleBooking(e) {
-      e.preventDefault();
-      const phoneInput = document.getElementById('res-phone').value;
-      document.getElementById('confirmed-phone').innerText = phoneInput;
-      
-      document.getElementById('booking-form').classList.add('hidden');
-      document.getElementById('success-message').classList.remove('hidden');
-    }
-
-    // Návrat z potvrzení zpět na úvodní stránku
-    function resetForm() {
-      document.getElementById('booking-form').reset();
-      document.getElementById('booking-form').classList.remove('hidden');
-      document.getElementById('success-message').classList.add('hidden');
-      switchTab('home');
-    }
-  </script>
-</body>
-</html>
