@@ -1,443 +1,185 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masáže Iris - Kladno</title>
-    <style>
-        :root {
-            --bg-main: #1c2a1e;
-            --bg-card: #223325;
-            --bg-header: #162218;
-            --primary: #059669;
-            --primary-hover: #10b981;
-            --accent: #ba005d;
-            --text-main: #f3f4f6;
-            --text-muted: #a7f3d0;
-            --border: rgba(6, 78, 59, 0.5);
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; }
-        
-        header { position: sticky; top: 0; background-color: rgba(22, 34, 24, 0.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); z-index: 50; }
-        .nav-container { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; }
-        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: Georgia, serif; font-size: 1.25rem; font-weight: bold; cursor: pointer; color: #ecfdf5; }
-        .logo-icon { width: 36px; height: 36px; border-radius: 50%; background: rgba(186, 0, 93, 0.3); border: 1px solid var(--accent); display: flex; align-items: center; justify-content: center; color: #fff; }
-        
-        nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        .nav-btn { background: none; border: none; color: var(--text-muted); padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
-        .nav-btn:hover, .nav-btn.active { background: rgba(6, 78, 59, 0.6); color: #fff; }
-        .btn-primary { background: var(--primary); color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 9999px; cursor: pointer; font-weight: 500; text-decoration: none; display: inline-block; transition: background 0.2s; }
-        .btn-primary:hover { background: var(--primary-hover); }
-
-        main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; flex: 1; width: 100%; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        /* Hero */
-        .hero { text-align: center; padding: 3rem 1rem; background: linear-gradient(to bottom, #243527, #1c2a1e); border-radius: 1rem; border: 1px solid var(--border); margin-bottom: 2rem; }
-        .hero h1 { font-family: Georgia, serif; font-size: 2.5rem; margin-bottom: 1rem; color: #ecfdf5; }
-        .hero p { color: var(--text-muted); max-width: 600px; margin: 0 auto 1.5rem auto; line-height: 1.6; }
-
-        /* Grid & Cards */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
-        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; }
-        .card-img { width: 100%; height: 200px; object-fit: cover; border-bottom: 1px solid var(--border); background-color: #162218; }
-        .card-body { padding: 1.25rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between; }
-        .card h3 { font-size: 1.2rem; color: #ecfdf5; margin-bottom: 0.5rem; }
-        .price { font-size: 1.25rem; font-weight: bold; color: #34d399; }
-        .badge { display: inline-block; background: rgba(6, 78, 59, 0.6); color: var(--text-muted); font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 9999px; margin-bottom: 0.75rem; align-self: flex-start; }
-
-        /* Forms */
-        form { background: var(--bg-card); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.5rem; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
-        .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
-        .form-group label { font-size: 0.85rem; color: var(--text-muted); }
-        input, select, textarea { background: var(--bg-main); border: 1px solid var(--border); color: white; padding: 0.6rem; border-radius: 0.5rem; width: 100%; font-size: 0.95rem; }
-        input:focus, select:focus, textarea:focus { outline: 1px solid var(--primary); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-
-        /* Gallery */
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
-        .gallery-item { aspect-ratio: 4/3; background: var(--bg-card); border-radius: 0.5rem; overflow: hidden; border: 1px solid var(--border); }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-        .gallery-item:hover img { transform: scale(1.05); }
-
-        /* Reviews */
-        .review-card { background: var(--bg-card); border: 1px solid var(--border); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-        .stars { color: #fbbf24; margin: 0.25rem 0; }
-
-        footer { background: var(--bg-header); border-top: 1px solid var(--border); text-align: center; padding: 1.5rem; font-size: 0.8rem; color: var(--text-muted); }
-        .alert { background: rgba(5, 150, 105, 0.2); border: 1px solid var(--primary); color: #ecfdf5; padding: 0.75rem; border-radius: 0.5rem; text-align: center; margin-bottom: 1rem; display: none; }
-
-        @media (max-width: 640px) {
-            .nav-container { flex-direction: column; gap: 0.75rem; }
-            .form-row { grid-template-columns: 1fr; }
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#1c2a1e" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Masáže Iris" />
+<title>Masáže Iris | Profesionální masáže Kladno</title>
+<!-- React & Babel CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<!-- Tailwind CSS pro moderní design -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #1c2a1e; font-family: system-ui, -apple-system, sans-serif; color: #f3f4f6; }
+  #root { min-height: 100vh; }
+</style>
 </head>
 <body>
+<div id="root"></div>
 
-    <header>
-        <div class="nav-container">
-            <div class="logo" onclick="switchTab('home')">
-                <div class="logo-icon">I</div>
-                <span>Masáže Iris</span>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+
+function App() {
+  const [activeTab, setActiveTab] = useState('home');
+  const [reservation, setReservation] = useState({ name: '', phone: '', service: 'Relaxační masáž', date: '', time: '' });
+  const [submitted, setSubmitted] = useState(false);
+
+  const services = [
+    { id: 1, name: 'Relaxační aromaterapeutická masáž', time: '60 min', price: '900 Kč', desc: 'Uvolňující masáž s použitím 100% přírodních esenciálních olejů.' },
+    { id: 2, name: 'Masáž lavovými kameny (Hot Stones)', time: '90 min', price: '1 300 Kč', desc: 'Hluboce prohříkavá masáž, která zbavuje tělo stresu a napětí.' },
+    { id: 3, name: 'Klasická sportovní a rekondiční masáž', time: '45 min', price: '750 Kč', desc: 'Zaměřeno na uvolnění ztuhlých svalů po fyzické zátěži.' },
+    { id: 4, name: 'Masáž šíje a zádové sestavy', time: '30 min', price: '550 Kč', desc: 'Rychlá úleva od bolesti přisedavém zaměstnání.' }
+  ];
+
+  const handleBooking = (e) => {
+    e.preventDefault();
+    if(!reservation.name || !reservation.phone || !reservation.date) return;
+    setSubmitted(true);
+  };
+
+  return (
+    <div className="min-h-100vh pb-20">
+      {/* Hlavní hlavička */}
+      <header className="bg-[#142015] border-b border-[#2d4631] sticky top-0 z-50 px-4 py-3 flex justify-between items-center shadow-md">
+        <h1 className="text-xl font-bold tracking-wide text-emerald-400">🌿 Masáže Iris</h1>
+        <nav className="flex gap-4 text-sm font-medium">
+          <button onClick={() => setActiveTab('home')} className={`transition ${activeTab === 'home' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Úvod</button>
+          <button onClick={() => setActiveTab('services')} className={`transition ${activeTab === 'services' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Služby</button>
+          <button onClick={() => setActiveTab('booking')} className={`transition ${activeTab === 'booking' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Rezervace</button>
+        </nav>
+      </header>
+
+      {/* Hlavní obsah */}
+      <main className="max-w-md mx-auto p-4">
+        {activeTab === 'home' && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="rounded-2xl overflow-hidden shadow-lg border border-[#2d4631] bg-[#243727] p-6 text-center">
+              <h2 className="text-2xl font-bold mb-2 text-emerald-300">Dopřejte svému tělu hluboký odpočinek</h2>
+              <p className="text-gray-300 text-sm mb-6">Profesionální masáže v příjemném a klidném prostředí. Zbavte se stresu a svalového napětí.</p>
+              <button 
+                onClick={() => setActiveTab('booking')} 
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow transition">
+                Rezervovat termín
+              </button>
             </div>
-            <nav>
-                <button class="nav-btn active" onclick="switchTab('home')">Úvod</button>
-                <button class="nav-btn" onclick="switchTab('services')">Služby a Ceník</button>
-                <button class="nav-btn" onclick="switchTab('booking')">Rezervace</button>
-                <button class="nav-btn" onclick="switchTab('gallery')">Galerie</button>
-                <button class="nav-btn" onclick="switchTab('reviews')">Hodnocení</button>
-                <button class="nav-btn" onclick="switchTab('contact')">Kontakt</button>
-            </nav>
-            <a href="tel:+420797862332" class="btn-primary">📞 Rezervovat</a>
-        </div>
-    </header>
 
-    <main>
-        <!-- Home Tab -->
-        <section id="home" class="tab-content active">
-            <div class="hero">
-                <h1>Ochutnejte hlubokou relaxaci</h1>
-                <p>Vítejte v oáze klidu studia Masáže Iris Irena Stručková. Nabízíme profesionální sportovní, relaxační masáže, maderoterapii, baňkování a exkluzivní techniky pro vaše zdraví a pohodu.</p>
-                <button class="btn-primary" onclick="switchTab('booking')">Online Rezervace</button>
+            <div className="bg-[#243727] border border-[#2d4631] rounded-2xl p-5 shadow">
+              <h3 className="font-bold text-emerald-300 mb-2">📍 Kde nás najdete</h3>
+              <p className="text-sm text-gray-300 mb-2">Kladno a okolí (přesnou adresu obdržíte v potvrzení rezervace).</p>
+              <p className="text-sm text-gray-300">📞 Telefon: <a href="tel:+420123456789" className="text-emerald-400 underline">+420 123 456 789</a></p>
             </div>
-            <div class="grid">
-                <div class="card" style="padding: 1.5rem;">
-                    <h3>Individuální přístup</h3>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Každá masáž je přizpůsobena vašim aktuálním fyzickým a psychickým potřebám.</p>
+          </div>
+        )}
+
+        {activeTab === 'services' && (
+          <div className="space-y-4 animate-fadeIn">
+            <h2 className="text-xl font-bold text-emerald-300 mb-4">Nabídka masáží</h2>
+            {services.map(s => (
+              <div key={s.id} className="bg-[#243727] border border-[#2d4631] rounded-xl p-4 shadow flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-semibold text-white">{s.name}</h3>
+                    <span className="text-emerald-400 font-bold">{s.price}</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-3">Délka: {s.time}</p>
+                  <p className="text-sm text-gray-300 mb-4">{s.desc}</p>
                 </div>
-                <div class="card" style="padding: 1.5rem;">
-                    <h3>Přírodní péče</h3>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Používáme kvalitní přírodní oleje, med, baňky i bylinné tyčinky na tygrování.</p>
+                <button 
+                  onClick={() => { setReservation({...reservation, service: s.name}); setActiveTab('booking'); }}
+                  className="self-end px-4 py-2 bg-emerald-700/50 hover:bg-emerald-600 text-emerald-200 text-xs font-semibold rounded-lg transition">
+                  Vybrat masáž
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'booking' && (
+          <div className="bg-[#243727] border border-[#2d4631] rounded-2xl p-5 shadow animate-fadeIn">
+            <h2 className="text-xl font-bold text-emerald-300 mb-4">Online Rezervace</h2>
+            {submitted ? (
+              <div className="text-center py-8 space-y-3">
+                <div className="text-4xl">✅</div>
+                <h3 className="text-lg font-bold text-white">Děkujeme za rezervaci!</h3>
+                <p className="text-sm text-gray-300">Váš termín byl předběžně přijat. Ozveme se vám s potvrzením na telefonní číslo <span className="text-emerald-400 font-semibold">{reservation.phone}</span>.</p>
+                <button onClick={() => { setSubmitted(false); setActiveTab('home'); }} className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm">Zpět na úvod</button>
+              </div>
+            ) : (
+              <form onSubmit={handleBooking} className="space-y-4">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Vybraná služba</label>
+                  <select 
+                    value={reservation.service} 
+                    onChange={e => setReservation({...reservation, service: e.target.value})}
+                    className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    {services.map(s => <option key={s.id} value={s.name}>{s.name} ({s.price})</option>)}
+                  </select>
                 </div>
-                <div class="card" style="padding: 1.5rem;">
-                    <h3>Klidné prostředí</h3>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Příjemný prostor v Kladně navržený tak, abyste zahodili starosti všedních dnů.</p>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Vaše jméno</label>
+                  <input 
+                    type="text" required placeholder="např. Jana Nováková"
+                    value={reservation.name} 
+                    onChange={e => setReservation({...reservation, name: e.target.value})}
+                    className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500" />
                 </div>
-            </div>
-        </section>
-
-        <!-- Services Tab -->
-        <section id="services" class="tab-content">
-            <h2 style="margin-bottom: 1.5rem; font-family: Georgia, serif;">Služby a Ceník</h2>
-            <div class="grid" id="services-container"></div>
-        </section>
-
-        <!-- Booking Tab -->
-        <section id="booking" class="tab-content">
-            <h2 style="margin-bottom: 1.5rem; font-family: Georgia, serif; text-align: center;">Rezervace Masáže</h2>
-            <div id="booking-alert" class="alert">Rezervace byla úspěšně odeslána a uložena!</div>
-            <form id="booking-form" onsubmit="handleBooking(event)">
-                <div class="form-group">
-                    <label>Vyberte službu</label>
-                    <select id="booking-service" required></select>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Telefonní číslo</label>
+                  <input 
+                    type="tel" required placeholder="+420 777 888 999"
+                    value={reservation.phone} 
+                    onChange={e => setReservation({...reservation, phone: e.target.value})}
+                    className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500" />
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Datum</label>
-                        <input type="date" id="booking-date" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Čas</label>
-                        <input type="time" id="booking-time" value="10:00" required>
-                    </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Datum</label>
+                    <input 
+                      type="date" required
+                      value={reservation.date} 
+                      onChange={e => setReservation({...reservation, date: e.target.value})}
+                      className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Čas</label>
+                    <input 
+                      type="time" required
+                      value={reservation.time} 
+                      onChange={e => setReservation({...reservation, time: e.target.value})}
+                      className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-emerald-500" />
+                  </div>
                 </div>
-                <div class="form-group">
-                    <label>Jméno a Příjmení</label>
-                    <input type="text" id="booking-name" placeholder="Jan Novák" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="booking-email" placeholder="jan@email.cz" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Telefon</label>
-                        <input type="tel" id="booking-phone" placeholder="+420 797 862 332" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Poznámka</label>
-                    <textarea id="booking-note" rows="3" placeholder="Zdravotní omezení nebo speciální přání..."></textarea>
-                </div>
-                <button type="submit" class="btn-primary" style="width: 100%; padding: 0.75rem;">Odeslat rezervaci</button>
-            </form>
+                <button type="submit" className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow transition mt-2">
+                  Odeslat rezervaci
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+      </main>
 
-            <div style="max-width: 600px; margin: 2rem auto 0 auto;">
-                <h3 style="margin-bottom: 1rem;">Vaše uložené rezervace</h3>
-                <div id="my-bookings"></div>
-            </div>
-        </section>
+      {/* Dolní navigace pro mobilní zařízení */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-[#142015] border-t border-[#2d4631] py-3 px-6 flex justify-around text-xs text-gray-400">
+        <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center ${activeTab === 'home' ? 'text-emerald-400' : ''}`}>
+          <span>🏠</span> Úvod
+        </button>
+        <button onClick={() => setActiveTab('services')} className={`flex flex-col items-center ${activeTab === 'services' ? 'text-emerald-400' : ''}`}>
+          <span>💆‍♀️</span> Služby
+        </button>
+        <button onClick={() => setActiveTab('booking')} className={`flex flex-col items-center ${activeTab === 'booking' ? 'text-emerald-400' : ''}`}>
+          <span>📅</span> Rezervace
+        </button>
+      </footer>
+    </div>
+  );
+}
 
-        <!-- Gallery Tab -->
-        <section id="gallery" class="tab-content">
-            <h2 style="margin-bottom: 1.5rem; font-family: Georgia, serif;">Fotogalerie ze Studia</h2>
-            <div class="gallery-grid" id="gallery-container"></div>
-        </section>
-
-        <!-- Reviews Tab -->
-        <section id="reviews" class="tab-content">
-            <h2 style="margin-bottom: 1.5rem; font-family: Georgia, serif;">Hodnocení klientů</h2>
-            <form onsubmit="handleReview(event)" style="margin-bottom: 2rem;">
-                <h3>Napsat hodnocení</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Jméno</label>
-                        <input type="text" id="review-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Hodnocení</label>
-                        <select id="review-rating">
-                            <option value="5">5 / 5 - Výborné</option>
-                            <option value="4">4 / 5 - Velmi dobré</option>
-                            <option value="3">3 / 5 - Průměrné</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Text zkušenosti</label>
-                    <textarea id="review-text" rows="3" required></textarea>
-                </div>
-                <button type="submit" class="btn-primary">Přidat hodnocení</button>
-            </form>
-            <div id="reviews-container"></div>
-        </section>
-
-        <!-- Contact Tab -->
-        <section id="contact" class="tab-content">
-            <h2 style="margin-bottom: 1.5rem; font-family: Georgia, serif;">Kontakt & Adresa</h2>
-            <div class="grid">
-                <div class="card" style="padding: 1.5rem;">
-                    <h3>Masáže Iris</h3>
-                    <p style="color: var(--text-muted); line-height: 1.8;">
-                        <strong>Provozovatel:</strong> Irena Stručková<br>
-                        <strong>Adresa:</strong> Pařížská 2152, Kladno<br>
-                        <strong>Telefon:</strong> <a href="tel:+420797862332" style="color: #34d399;">+420 797 862 332</a><br>
-                        <strong>Email:</strong> info@masaze-iris.cz
-                    </p>
-                </div>
-                <div class="card" style="padding: 1.5rem;">
-                    <h3>Otevírací doba</h3>
-                    <p style="color: var(--text-muted); line-height: 1.8;">
-                        Dle předchozích telefonických či online objednávek.<br>
-                        Pondělí - Pátek: 9:00 - 19:00<br>
-                        Dárkové poukazy k dispozici na vyžádání.
-                    </p>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        © 2026 Masáže Iris – Irena Stručková. Všechna práva vyhrazena.
-    </footer>
-
-    <script>
-        const SERVICES = [
-            { 
-                id: '1', 
-                name: 'Sportovní masáž', 
-                duration: '60 min', 
-                price: 1000, 
-                img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=500&auto=format&fit=crop&q=60',
-                description: 'Nastartování nervosvalového systému, vysoké tempo a hluboká razance pro přípravu na výkon i regeneraci.' 
-            },
-            { 
-                id: '2', 
-                name: 'Relaxační masáž', 
-                duration: '60 min', 
-                price: 900, 
-                img: 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=500&auto=format&fit=crop&q=60',
-                description: 'Ideální pro uvolnění těla i mysli, zmírnění stresu a podporu celkové vnitřní harmonie.' 
-            },
-            { 
-                id: '3', 
-                name: 'Medová detoxikační masáž', 
-                duration: '60 min', 
-                price: 1100, 
-                img: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=500&auto=format&fit=crop&q=60',
-                description: 'Využívá přírodních vlastností medu k detoxikaci organismu, prokrvení a zlepšení stavu pokožky.' 
-            },
-            { 
-                id: '4', 
-                name: 'Baňkování', 
-                duration: '45 min', 
-                price: 800, 
-                img: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=500&auto=format&fit=crop&q=60',
-                description: 'Tradiční metoda s podtlakem k efektivnímu uvolnění hlubokého svalového napětí a zlepšení krevního oběhu.' 
-            },
-            { 
-                id: '5', 
-                name: 'Tygrování', 
-                duration: '60 min', 
-                price: 1200, 
-                img: 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=500&auto=format&fit=crop&q=60',
-                description: 'Japonská technika s bylinnou tyčinkou a tepelnou stimulací. Extrémně efektivní pro uvolnění a úlevu od křečí či otoků.' 
-            }
-        ];
-
-        const GALLERY = [
-            'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=500&auto=format&fit=crop&q=60',
-            'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=500&auto=format&fit=crop&q=60',
-            'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=500&auto=format&fit=crop&q=60',
-            'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=500&auto=format&fit=crop&q=60',
-            'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=500&auto=format&fit=crop&q=60'
-        ];
-
-        const INITIAL_REVIEWS = [
-            { id: '1', name: 'Eva K.', rating: 5, text: 'Úžasný zážitek! Tygrování a sportovní masáž mi neuvěřitelně pomohly od bolesti zad.', date: '12. 05. 2025' },
-            { id: '2', name: 'Martin P.', rating: 5, text: 'Vynikající přístup paní Stručkové a příjemné klidné prostředí. Vřele doporučuji!', date: '28. 08. 2025' }
-        ];
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            
-            const btnIndex = ['home', 'services', 'booking', 'gallery', 'reviews', 'contact'].indexOf(tabId);
-            if(btnIndex !== -1) {
-                document.querySelectorAll('.nav-btn')[btnIndex].classList.add('active');
-            }
-        }
-
-        function renderServices() {
-            const container = document.getElementById('services-container');
-            const select = document.getElementById('booking-service');
-            
-            container.innerHTML = SERVICES.map(s => `
-                <div class="card">
-                    <img src="${s.img}" alt="${s.name}" class="card-img" />
-                    <div class="card-body">
-                        <div>
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <h3>${s.name}</h3>
-                                <span class="price">${s.price} Kč</span>
-                            </div>
-                            <span class="badge">${s.duration}</span>
-                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">${s.description}</p>
-                        </div>
-                        <button class="btn-primary" onclick="selectServiceForBooking('${s.id}')">Vybrat pro rezervaci</button>
-                    </div>
-                </div>
-            `).join('');
-
-            select.innerHTML = SERVICES.map(s => `
-                <option value="${s.id}">${s.name} (${s.duration}) - ${s.price} Kč</option>
-            `).join('');
-        }
-
-        function selectServiceForBooking(id) {
-            document.getElementById('booking-service').value = id;
-            switchTab('booking');
-        }
-
-        function renderGallery() {
-            const container = document.getElementById('gallery-container');
-            container.innerHTML = GALLERY.map((url, idx) => `
-                <div class="gallery-item">
-                    <img src="${url}" alt="Masáže Iris fotka ${idx + 1}" loading="lazy">
-                </div>
-            `).join('');
-        }
-
-        function getReviews() {
-            return JSON.parse(localStorage.getItem('iris_reviews')) || INITIAL_REVIEWS;
-        }
-
-        function renderReviews() {
-            const reviews = getReviews();
-            const container = document.getElementById('reviews-container');
-            container.innerHTML = reviews.map(r => `
-                <div class="review-card">
-                    <div style="display:flex; justify-content:space-between;">
-                        <strong>${r.name}</strong>
-                        <span style="font-size:0.8rem; color:var(--text-muted);">${r.date}</span>
-                    </div>
-                    <div class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">${r.text}</p>
-                </div>
-            `).join('');
-        }
-
-        function handleReview(e) {
-            e.preventDefault();
-            const reviews = getReviews();
-            const newReview = {
-                id: Date.now().toString(),
-                name: document.getElementById('review-name').value,
-                rating: parseInt(document.getElementById('review-rating').value),
-                text: document.getElementById('review-text').value,
-                date: new Date().toLocaleDateString('cs-CZ')
-            };
-            reviews.unshift(newReview);
-            localStorage.setItem('iris_reviews', JSON.stringify(reviews));
-            renderReviews();
-            e.target.reset();
-        }
-
-        function getBookings() {
-            return JSON.parse(localStorage.getItem('iris_bookings')) || [];
-        }
-
-        function renderBookings() {
-            const bookings = getBookings();
-            const container = document.getElementById('my-bookings');
-            if (bookings.length === 0) {
-                container.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">Zatím nemáte žádné uložené rezervace.</p>';
-                return;
-            }
-            container.innerHTML = bookings.map(b => `
-                <div class="card" style="margin-bottom:0.5rem; padding:0.75rem 1rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <strong>${b.serviceName}</strong><br>
-                            <span style="font-size:0.8rem; color:var(--text-muted);">${b.date} v ${b.time} - ${b.name}</span>
-                        </div>
-                        <span class="price" style="font-size:1rem;">${b.price} Kč</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function handleBooking(e) {
-            e.preventDefault();
-            const serviceId = document.getElementById('booking-service').value;
-            const service = SERVICES.find(s => s.id === serviceId);
-            
-            const booking = {
-                id: Date.now().toString(),
-                serviceName: service.name,
-                price: service.price,
-                date: document.getElementById('booking-date').value,
-                time: document.getElementById('booking-time').value,
-                name: document.getElementById('booking-name').value,
-                email: document.getElementById('booking-email').value,
-                phone: document.getElementById('booking-phone').value,
-                note: document.getElementById('booking-note').value
-            };
-
-            const bookings = getBookings();
-            bookings.unshift(booking);
-            localStorage.setItem('iris_bookings', JSON.stringify(bookings));
-
-            const alert = document.getElementById('booking-alert');
-            alert.style.display = 'block';
-            setTimeout(() => alert.style.display = 'none', 4000);
-
-            document.getElementById('booking-form').reset();
-            renderBookings();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            renderServices();
-            renderGallery();
-            renderReviews();
-            renderBookings();
-        });
-    </script>
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
 </body>
 </html>
