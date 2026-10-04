@@ -46,12 +46,12 @@ function App() {
 
   const handleBooking = (e) => {
     e.preventDefault();
-    if(!reservation.name || !reservation.phone || !reservation.date) return;
+    if(!reservation.name || !reservation.phone) return;
     setSubmitted(true);
   };
 
   return (
-    <div className="min-h-100vh pb-24">
+    <div className="min-h-screen pb-24">
       {/* Hlavička */}
       <header className="bg-[#142015] border-b border-[#2d4631] sticky top-0 z-50 px-4 py-3 flex justify-between items-center shadow-md">
         <div>
@@ -71,6 +71,9 @@ function App() {
         {activeTab === 'home' && (
           <div className="space-y-4">
             <div className="rounded-2xl overflow-hidden shadow-lg border border-[#2d4631] bg-[#243727] p-5 text-center">
+              {/* TADY JE MÍSTO PRO VAŠI FOTKU */}
+              <img src="images/salon.jpg" alt="Salon Masáže Iris" className="mx-auto rounded-xl mb-4 max-w-full h-auto" width={400} />
+              
               <h2 className="text-xl font-bold mb-2 text-emerald-300">Profesionální péče o vaše tělo</h2>
               <p className="text-gray-300 text-xs mb-4">Navštivte salon Masáže Iris v Osoblaze a dopřejte si zasloužený relax.</p>
               <button 
@@ -158,45 +161,19 @@ function App() {
                     onChange={e => setReservation({...reservation, phone: e.target.value})}
                     className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500" />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-gray-400 mb-1">Datum</label>
-                    <input 
-                      type="date" required
-                      value={reservation.date} 
-                      onChange={e => setReservation({...reservation, date: e.target.value})}
-                      className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500" />
-                  </div>
-                  <div>
-                    <label className="block text-gray-400 mb-1">Čas</label>
-                    <input 
-                      type="time" required
-                      value={reservation.time} 
-                      onChange={e => setReservation({...reservation, time: e.target.value})}
-                      className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500" />
-                  </div>
-                </div>
-                <button type="submit" className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow transition mt-2">
-                  Odeslat rezervaci
-                </button>
+                <button type="submit" className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl mt-4 transition">Odeslat</button>
               </form>
             )}
           </div>
         )}
       </main>
-
-      {/* Spodní lišta */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-[#142015] border-t border-[#2d4631] py-2 px-4 flex justify-around text-[10px] text-gray-400">
-        <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center ${activeTab === 'home' ? 'text-emerald-400' : ''}`}><span>🏠</span>Úvod</button>
-        <button onClick={() => setActiveTab('services')} className={`flex flex-col items-center ${activeTab === 'services' ? 'text-emerald-400' : ''}`}><span>💆‍♀️️</span>Služby</button>
-        <button onClick={() => setActiveTab('vouchers')} className={`flex flex-col items-center ${activeTab === 'vouchers' ? 'text-emerald-400' : ''}`}><span>🎁</span>Poukazy</button>
-        <button onClick={() => setActiveTab('booking')} className={`flex flex-col items-center ${activeTab === 'booking' ? 'text-emerald-400' : ''}`}><span>📅</span>Rezervace</button>
-      </footer>
     </div>
   );
 }
 
-ReactDOM.render(<App />, document.getElementById('root'));
+// Spuštění samotné aplikace a propojení s HTML div#root
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
 </script>
 </body>
 </html>
