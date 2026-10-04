@@ -26,15 +26,15 @@ const { useState } = React;
 
 function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const [reservation, setReservation] = useState({ name: '', phone: '', service: 'Relaxační masáž (650 Kč)', date: '', time: '' });
+  const [reservation, setReservation] = useState({ name: '', phone: '', service: 'Relaxační masáž', date: '', time: '' });
   const [submitted, setSubmitted] = useState(false);
 
   const services = [
-    { id: 1, name: 'Relaxační masáž', time: 'Dle výběru', price: '650 Kč', desc: 'Uvolňující masáž pro celkové uklidnění těla i mysli.' },
-    { id: 2, name: 'Sportovní masáž', time: 'Dle výběru', price: '500 Kč', desc: 'Intenzivnější techniky zaměřené na svalové napětí.' },
-    { id: 3, name: 'Medová detoxikační masáž', time: 'Dle výběru', price: '1 000 Kč', desc: 'Hloubková očista a prokrvení organismu.' },
-    { id: 4, name: 'Baňkování', time: 'Dle výběru', price: '500 Kč', desc: 'Účinná metoda uvolnění zatuhlých míst.' },
-    { id: 5, name: 'Lázeňské tepelné terapie', time: 'Dle výběru', price: '300 Kč', desc: 'Prohřívací procedury pro regeneraci.' }
+    { id: 1, name: 'Relaxační masáž', desc: 'Uvolňující masáž pro celkové uklidnění těla i mysli.' },
+    { id: 2, name: 'Sportovní masáž', desc: 'Intenzivnější techniky zaměřené na svalové napětí.' },
+    { id: 3, name: 'Medová detoxikační masáž', desc: 'Hloubková očista a prokrvení organismu.' },
+    { id: 4, name: 'Baňkování', desc: 'Účinná metoda uvolnění zatuhlých míst.' },
+    { id: 5, name: 'Lázeňské tepelné terapie', desc: 'Prohřívací procedury pro regeneraci.' }
   ];
 
   const vouchers = [
@@ -60,7 +60,7 @@ function App() {
         </div>
         <nav className="flex gap-3 text-xs font-medium">
           <button onClick={() => setActiveTab('home')} className={`transition ${activeTab === 'home' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Úvod</button>
-          <button onClick={() => setActiveTab('services')} className={`transition ${activeTab === 'services' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Služby & Ceny</button>
+          <button onClick={() => setActiveTab('services')} className={`transition ${activeTab === 'services' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Služby</button>
           <button onClick={() => setActiveTab('vouchers')} className={`transition ${activeTab === 'vouchers' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Poukazy</button>
           <button onClick={() => setActiveTab('booking')} className={`transition ${activeTab === 'booking' ? 'text-emerald-400 underline' : 'text-gray-300'}`}>Rezervace</button>
         </nav>
@@ -91,19 +91,15 @@ function App() {
 
         {activeTab === 'services' && (
           <div className="space-y-3">
-            <h2 className="text-lg font-bold text-emerald-300 mb-2">Nabídka služeb a ceník</h2>
+            <h2 className="text-lg font-bold text-emerald-300 mb-2">Nabídka služeb</h2>
             {services.map(s => (
               <div key={s.id} className="bg-[#243727] border border-[#2d4631] rounded-xl p-3 shadow flex flex-col justify-between">
                 <div>
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-semibold text-white text-sm">{s.name}</h3>
-                    <span className="text-emerald-400 font-bold text-sm">{s.price}</span>
-                  </div>
-                  <p className="text-[11px] text-gray-400 mb-2">{s.time}</p>
+                  <h3 className="font-semibold text-white text-sm mb-1">{s.name}</h3>
                   <p className="text-xs text-gray-300 mb-3">{s.desc}</p>
                 </div>
                 <button 
-                  onClick={() => { setReservation({...reservation, service: `${s.name} (${s.price})`}); setActiveTab('booking'); }}
+                  onClick={() => { setReservation({...reservation, service: s.name}); setActiveTab('booking'); }}
                   className="self-end px-3 py-1.5 bg-emerald-700/50 hover:bg-emerald-600 text-emerald-200 text-xs font-semibold rounded-lg transition">
                   Vybrat
                 </button>
@@ -150,7 +146,7 @@ function App() {
                     value={reservation.service} 
                     onChange={e => setReservation({...reservation, service: e.target.value})}
                     className="w-full bg-[#1c2a1e] border border-[#2d4631] rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500">
-                    {services.map(s => <option key={s.id} value={`${s.name} (${s.price})`}>{s.name} - {s.price}</option>)}
+                    {services.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -199,7 +195,7 @@ function App() {
       {/* Spodní lišta */}
       <footer className="fixed bottom-0 left-0 right-0 bg-[#142015] border-t border-[#2d4631] py-2 px-4 flex justify-around text-[10px] text-gray-400">
         <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center ${activeTab === 'home' ? 'text-emerald-400' : ''}`}><span>🏠</span>Úvod</button>
-        <button onClick={() => setActiveTab('services')} className={`flex flex-col items-center ${activeTab === 'services' ? 'text-emerald-400' : ''}`}><span>💆‍♀️</span>Služby</button>
+        <button onClick={() => setActiveTab('services')} className={`flex flex-col items-center ${activeTab === 'services' ? 'text-emerald-400' : ''}`}><span>💆‍♀️️</span>Služby</button>
         <button onClick={() => setActiveTab('vouchers')} className={`flex flex-col items-center ${activeTab === 'vouchers' ? 'text-emerald-400' : ''}`}><span>🎁</span>Poukazy</button>
         <button onClick={() => setActiveTab('booking')} className={`flex flex-col items-center ${activeTab === 'booking' ? 'text-emerald-400' : ''}`}><span>📅</span>Rezervace</button>
       </footer>
