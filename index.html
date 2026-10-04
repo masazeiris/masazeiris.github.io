@@ -80,6 +80,7 @@
             <button onclick="resetForm()" class="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs cursor-pointer">Zpět domů</button>
           </div>
 
+          <!-- Rezervační formulář -->
           <form id="booking-form" onsubmit="handleBooking(event)" class="space-y-3 text-xs">
             <div>
               <label class="block text-gray-400 mb-1">Vybraná služba</label>
@@ -158,7 +159,6 @@
 
     // Inicializace dat ihned po otevření webu
     window.onload = function() {
-      // Záznam o startu aplikace
       if (!localStorage.getItem('sys_logs')) {
         logEvent("Systém úspěšně inicializován.");
       }
